@@ -1,8 +1,7 @@
 .login_page_wrapper {
   background-color: var(--bg-secondary);
-  background: url("/img/landing/hero-bg-light.png");
-  background-size: 150% 150%;
-  background-position: 50% 0%;
+  background-size: 100%;
+  background-position: 50% 50%;
   height: 100vh;
   width: 100%;
   display: flex;
@@ -22,6 +21,13 @@
   border-radius: 8px;
   backdrop-filter: blur(10px);
   background: var(--bg-header);
+}
+
+.bg__light {
+  background: var(--bg-secondary);
+}
+.bg__dark {
+  background-color: var(--bg-primary);
 }
 
 .login_img {
@@ -54,6 +60,10 @@
   & > img {
     height: 60px;
   }
+
+  a {
+    line-height: 1.2;
+  }
 }
 
 .social_login_container .google_btn,
@@ -82,5 +92,17 @@
     padding: 10px;
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
+  }
+
+  .login_page_wrapper > div {
+    max-width: 90vw;
+    margin: 0 auto;
+    padding: 50px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    background: var(--bg-header);
+    h3 {
+      text-align: center;
+    }
   }
 }

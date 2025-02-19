@@ -1,288 +1,273 @@
-import SpinLoader from "@/components/SpinLoader/SpinLoader";
 import SvgIcons from "@/components/SvgIcons";
-
-import { convertSecToHourandMin } from "@/pages/admin/content";
-import ProgramService from "@/services/ProgramService";
+import { themeColors } from "@/services/darkThemeConfig";
 import styles from "@/styles/Preview.module.scss";
-import { CourseLessonAPIResponse, VideoLesson } from "@/types/courses/Course";
-import { $Enums, CourseState, CourseType, ResourceContentType, Role } from "@prisma/client";
-import { Breadcrumb, Button, Collapse, Flex, Space, Tag } from "antd";
-import Link from "next/link";
+import { IChapterView, ICourseDetailView } from "@/types/courses/Course";
+import { LoadingOutlined, UserOutlined } from "@ant-design/icons";
+import { ResourceContentType, Role } from "@prisma/client";
+import { Avatar, Button, Collapse, CollapseProps, Flex, Spin, Tabs } from "antd";
 import { useRouter } from "next/router";
 
-import { FC, ReactNode, useState } from "react";
+import { CSSProperties, FC } from "react";
+import { useMediaQuery } from "react-responsive";
 
-const Label: FC<{
-  title: string;
-  time: string;
-  keyValue: string;
-  resourceId?: number;
-  isCompleted?: boolean;
-  icon: ReactNode;
-  contentType: ResourceContentType;
-}> = ({ title, time, keyValue, icon, isCompleted, resourceId, contentType }) => {
-  return (
-    <div className={styles.labelContainer}>
-      <Flex justify="space-between" align="center">
+const CurriculumList: FC<{ chapters: IChapterView[] }> = ({ chapters }) => {
+  const collapsibleItems: CollapseProps["items"] = chapters.map((c, index) => {
+    const lessonItems = c.lessons.map((l) => {
+      return (
         <div>
-          <Flex gap={10} align="center">
-            <i>{isCompleted ? SvgIcons.check : icon}</i>
-            <div>{title}</div>
+          <Flex gap={10} align="center" style={{ marginLeft: 10, marginBottom: 10 }}>
+            <>
+              {l.lessonType === ResourceContentType.Assignment && <i>{SvgIcons.bookOpenFilled}</i>}
+              {l.lessonType === ResourceContentType.Video && <i>{SvgIcons.playFilled}</i>}
+              <p>{l.name}</p>
+            </>
           </Flex>
         </div>
-        <div>
-          <Tag className={styles.time_tag}>{time}</Tag>
-        </div>
-      </Flex>
-    </div>
-  );
+      );
+    });
+
+    return {
+      key: index,
+      label: c.name,
+      children: lessonItems,
+    };
+  });
+
+  return <Collapse className={styles.curriculum} bordered={true} accordion items={collapsibleItems} />;
 };
 
 const Preview: FC<{
-  courseDetail?: CourseLessonAPIResponse;
-  addContentPreview?: boolean;
-  videoUrl?: string;
-  onEnrollCourse?: () => void;
-  paymentDisable?: boolean;
-  paymentStatusLoading?: boolean;
+  courseDetail: ICourseDetailView;
+  previewMode: boolean;
+  handlePurchase: (courseId: number) => void;
+  handleLessonRedirection: (courseId: number) => void;
+  paymentCallback?: boolean;
+  extraStyle?: CSSProperties;
   loading?: boolean;
-  paymentStatus?: $Enums.paymentStatus;
-}> = ({
-  addContentPreview,
-  videoUrl,
-  paymentStatusLoading,
-  paymentDisable,
-  onEnrollCourse,
-  courseDetail,
-  loading,
-  paymentStatus,
-}) => {
+}> = ({ courseDetail, previewMode, handlePurchase, handleLessonRedirection, paymentCallback, extraStyle, loading }) => {
+  const isMobile = useMediaQuery({ query: "(max-width: 435px)" });
   const router = useRouter();
-  let isCourseCompleted = courseDetail?.course.userStatus === CourseState.COMPLETED;
-
-  const items = courseDetail?.lessons.map((content, i) => {
-    let totalTime = 0;
-    content.lessons.forEach((data) => {
-      if (data && data.videoDuration) {
-        totalTime = totalTime + data.videoDuration;
-      } else if (data && data.estimatedDuration) {
-        totalTime = totalTime + data.estimatedDuration * 60;
-      }
-    });
-    const duration = convertSecToHourandMin(totalTime);
-    return {
-      key: `${i + 1}`,
-      label: (
-        <Label
-          title={content.chapterName}
-          icon={SvgIcons.folder}
-          time={duration}
-          keyValue={`${i + 1}`}
-          contentType={$Enums.ResourceContentType.Video}
-        />
-      ),
-      children: content.lessons.map((res: VideoLesson, i: any) => {
-        if (res) {
-          const duration = addContentPreview
-            ? convertSecToHourandMin(res.videoDuration)
-            : convertSecToHourandMin(
-                res.contentType === ResourceContentType.Video ? res.videoDuration : Number(res.estimatedDuration) * 60
-              );
-          return (
-            <div className={styles.resContainer}>
-              <Label
-                title={res.title}
-                icon={res.contentType === $Enums.ResourceContentType.Assignment ? SvgIcons.file : SvgIcons.playBtn}
-                time={duration}
-                isCompleted={res.isWatched}
-                resourceId={res.videoId}
-                keyValue={`${i + 1}`}
-                contentType={res.contentType as ResourceContentType}
-              />
-            </div>
-          );
-        }
-      }),
-      showArrow: false,
-    };
-  });
-  const [activeCollapseKey, setActiveCollapseKey] = useState<string[]>(items ? items.map((item, i) => `${i + 1}`) : []);
-
-  const onChange = (key: string | string[]) => {
-    setActiveCollapseKey(key as string[]);
-  };
-
-  const onViewCertificate = () => {
-    ProgramService.getCertificateByCourseId(
-      Number(router.query.courseId),
-      (result) => {
-        const id = String(result.certificateId);
-        router.push(`/courses/${router.query.courseId}/certificate/${id}`);
-      },
-      (error) => {}
-    );
-  };
   return (
-    <section className={addContentPreview ? styles.add_preview_container : styles.preview_container}>
-      <Space direction="vertical">
-        <div style={{ fontSize: 20 }} className={styles.coursehHeaderLinks}>
-          {courseDetail && !addContentPreview && (
-            <Breadcrumb
+    <section className={styles.preview_container} style={extraStyle}>
+      <h4>{courseDetail.name}</h4>
+      <p>
+        A course by {courseDetail.author.name}, {courseDetail.author.designation}
+      </p>
+      <Flex align="flex-start" justify="flex-start" vertical={isMobile} gap={20}>
+        <div>
+          <div className={styles.video_container}>
+            <Flex style={{ height: "100%", width: "100%", position: "absolute" }} align="center" justify="center">
+              <Spin indicator={<LoadingOutlined spin />} size="large" />
+            </Flex>
+
+            {
+              <iframe
+                allowFullScreen
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  outline: "none",
+                  border: "none",
+                }}
+                src={courseDetail.trailerEmbedUrl}
+              ></iframe>
+            }
+          </div>
+          <div>
+            <Tabs
+              className={styles.course__details}
+              tabBarGutter={40}
+              tabBarExtraContent={
+                <>
+                  {courseDetail.certificateId && (
+                    <Button
+                      onClick={() =>
+                        router.push(`/courses/${router.query.slug}/certificate/${courseDetail?.certificateId}`)
+                      }
+                      type="primary"
+                    >
+                      View Certitificate
+                    </Button>
+                  )}
+                </>
+              }
               items={[
                 {
-                  title: <a href="/courses"> Courses</a>,
+                  key: "1",
+                  label: "Overview",
+                  children: <div>{courseDetail.description}</div>,
                 },
                 {
-                  title: `${courseDetail.course.name}`,
-                  className: styles.courseName,
+                  key: "2",
+                  label: "Curriculum",
+                  children: <CurriculumList chapters={courseDetail.chapters} />,
                 },
               ]}
             />
-          )}
-        </div>
-        <div className={styles.video_container}>
-          <Flex className={styles.spin_wrapper} align="center" justify="center">
-            <SpinLoader className="preview_loader" />
-          </Flex>
-          {
-            <iframe
-              allowFullScreen
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                outline: "none",
-                border: "none",
-              }}
-              src={videoUrl}
-            ></iframe>
-          }
-        </div>
-        <div className={styles.course__info}>
-          <Space direction="vertical">
-            <h2>{courseDetail?.course.name}</h2>
-            <p>{courseDetail?.course.description}</p>
-          </Space>
-
-          <Flex vertical gap={8}>
-            {courseDetail?.course.courseType === $Enums.CourseType.PAID &&
-              courseDetail.course.userRole !== Role.STUDENT && (
-                <Flex className={styles.coursePrice} align="center" gap={2}>
-                  <i> {SvgIcons.rupees}</i>
-                  {courseDetail.course.coursePrice}
-                </Flex>
-              )}
-            {courseDetail?.course.userRole === Role.STUDENT && (
-              <>
-                {isCourseCompleted ? (
-                  <Flex align="center" gap={10}>
-                    {!courseDetail?.course.previewMode && <Button onClick={onViewCertificate}>View Certificate</Button>}
-                    <Link
-                      href={`/courses/${router.query.courseId}/lesson/${courseDetail?.lessons[0].lessons[0].lessonId}`}
-                    >
-                      <Button type="primary">Rewatch</Button>
-                    </Link>
-                  </Flex>
-                ) : (
-                  <Button
-                    loading={loading}
-                    className={styles.save_btn}
-                    type="primary"
-                    onClick={() => {
-                      !addContentPreview && onEnrollCourse && onEnrollCourse();
-                    }}
-                  >
-                    {courseDetail && courseDetail?.course.progress > 0 ? "Resume" : "Start Course"}
-                    {SvgIcons.arrowRight}
-                  </Button>
-                )}
-              </>
-            )}
-
-            {(courseDetail?.course.userRole === Role.ADMIN || courseDetail?.course.userRole === Role.AUTHOR) && (
-              <Link href={`/courses/${router.query.courseId}/lesson/${courseDetail?.lessons[0].lessons[0].lessonId}`}>
-                <Button type="primary">View Course</Button>
-              </Link>
-            )}
-            {courseDetail?.course.userRole === "NOT_ENROLLED" && (
-              <>
-                {courseDetail.course.courseType === CourseType.PAID ? (
-                  <Button
-                    loading={loading}
-                    className={styles.save_btn}
-                    disabled={paymentDisable}
-                    type="primary"
-                    onClick={() => {
-                      !addContentPreview && onEnrollCourse && onEnrollCourse();
-                    }}
-                  >
-                    {paymentDisable ? (
-                      "Payment  in Progress"
-                    ) : (
-                      <>
-                        {paymentStatus === $Enums.paymentStatus.PENDING ? (
-                          "Complete the payment"
-                        ) : (
-                          <>
-                            {courseDetail?.course.courseType === $Enums.CourseType.PAID && (
-                              <Flex align="center" gap={10}>
-                                <i className={styles.lockIcon}>{SvgIcons.lock}</i>
-                                <div> Buy Course</div>
-                              </Flex>
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    loading={loading}
-                    className={styles.save_btn}
-                    type="primary"
-                    onClick={() => {
-                      !addContentPreview && onEnrollCourse && onEnrollCourse();
-                    }}
-                  >
-                    <Flex align="center" gap={10}>
-                      {courseDetail?.course.previewMode ? " Preview Course" : " Enroll Course"}
-                      {SvgIcons.arrowRight}
-                    </Flex>
-                  </Button>
-                )}
-              </>
-            )}
-            {courseDetail?.course.userRole === "NA" && (
-              <Link href={`/login?redirect=/course/${router.query.courseId}`}>
-                <Button type="primary">Login</Button>
-              </Link>
-            )}
-          </Flex>
-        </div>
-
-        <h2>Table of Contents</h2>
-        <div>
-          <div className={styles.chapter_list}>
-            <Collapse
-              onChange={onChange}
-              activeKey={activeCollapseKey}
-              size="small"
-              accordion={false}
-              items={
-                items &&
-                items.map((item, i) => {
-                  return {
-                    key: item.key,
-                    label: item.label,
-                    children: item.children,
-                    showArrow: false,
-                  };
-                })
-              }
-            />
           </div>
         </div>
-      </Space>
+        <div className={styles.course__offerings}>
+          {/* component for price display */}
+          <div className={styles.item__price}>
+            {/* Display the price and button for the preview mode */}
+            {previewMode && (
+              <>
+                {courseDetail.pricing.amount == 0 && (
+                  <>
+                    <h2>FREE</h2>
+                    <Button type="primary" style={{ width: 200 }}>
+                      Enroll for free
+                    </Button>
+                  </>
+                )}
+                {courseDetail.pricing.amount > 0 && (
+                  <>
+                    <Flex gap={10} align="center" justify="center">
+                      <div className={styles.pricing__currency}>{courseDetail.pricing.currency}</div>
+                      <h2>{courseDetail.pricing.amount}</h2>
+                    </Flex>
+                    <Button type="primary" size="large" style={{ width: 200 }}>
+                      Buy Now
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Display the price and button for the non-preview mode */}
+            {!previewMode && (
+              <>
+                {courseDetail.role === Role.NOT_ENROLLED && (
+                  <>
+                    <Flex gap={10} align="center" justify="center">
+                      {courseDetail.pricing.amount > 0 && (
+                        <div className={styles.pricing__currency}>{courseDetail.pricing.currency}</div>
+                      )}
+                      <h2>{courseDetail.pricing.amount == 0 ? "Free" : courseDetail.pricing.amount}</h2>
+                    </Flex>
+                    <Button
+                      loading={loading}
+                      type="primary"
+                      size="large"
+                      style={{ width: 200 }}
+                      onClick={(e) => handlePurchase(courseDetail.id)}
+                    >
+                      {courseDetail.pricing.amount == 0 ? "Enroll Now" : "Buy Course"}
+                    </Button>
+                  </>
+                )}
+                {(courseDetail.role === Role.ADMIN || courseDetail.role === Role.AUTHOR) && (
+                  <>
+                    <Flex gap={10} align="center" justify="center">
+                      {courseDetail.pricing.amount > 0 && (
+                        <div className={styles.pricing__currency}>{courseDetail.pricing.currency}</div>
+                      )}
+                      <h2>{courseDetail.pricing.amount == 0 ? "Free" : courseDetail.pricing.amount}</h2>
+                    </Flex>
+                    <Button
+                      loading={loading}
+                      type="primary"
+                      size="large"
+                      style={{ width: 200 }}
+                      onClick={(e) => handleLessonRedirection(courseDetail.id)}
+                    >
+                      Go to Course
+                    </Button>
+                  </>
+                )}
+                {courseDetail.role === Role.STUDENT && (
+                  <>
+                    <Flex gap={10} align="center" vertical justify="center">
+                      {paymentCallback && paymentCallback && (
+                        <>
+                          <i style={{ fontSize: "3.5rem", lineHeight: 0, color: themeColors.commons.success }}>
+                            {SvgIcons.checkBadgeFilled}
+                          </i>
+                          <h4>
+                            You have successfully <br />
+                            purchased this course
+                          </h4>
+                        </>
+                      )}
+                      {!paymentCallback && (
+                        <>
+                          <i style={{ fontSize: "3.5rem", lineHeight: 0, color: themeColors.commons.success }}>
+                            {SvgIcons.checkBadgeFilled}
+                          </i>
+                          <h4>You have already purchased this course on {courseDetail.enrolmentDate}</h4>
+                        </>
+                      )}
+                    </Flex>
+                    <Button
+                      type="primary"
+                      loading={loading}
+                      size="large"
+                      style={{ width: 200 }}
+                      onClick={(e) => handleLessonRedirection(courseDetail.id)}
+                    >
+                      Go to Course
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* component for price display */}
+          <div className={styles.offering__highlights}>
+            <p>
+              <b>This course includes</b>
+            </p>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.playFilled}</i>
+              <div>{courseDetail.contentDurationInHrs} hours of content</div>
+            </Flex>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.bookOpenFilled}</i>
+              <div>{courseDetail.assignmentsCount} assignments</div>
+            </Flex>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.clockFilled}</i>
+              {courseDetail.remainingDays ? (
+                <>
+                  {courseDetail.role === Role.STUDENT && (
+                    <div>{courseDetail.remainingDays} days of access remaining</div>
+                  )}
+                  {courseDetail.role !== Role.STUDENT && <div>{courseDetail.expiryInDays} days of access</div>}
+                </>
+              ) : (
+                <>Life time access</>
+              )}
+            </Flex>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.checkBadgeFilled}</i>
+              <div>Certificate on completion</div>
+            </Flex>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.calendarDaysFilled}</i>
+              <div>Free access to workshops</div>
+            </Flex>
+            <Flex gap={10} align="center">
+              <i>{SvgIcons.chatBubbleFilled}</i>
+              <div>Access to Discussion</div>
+            </Flex>
+          </div>
+
+          <div className={styles.course__author}>
+            <p>
+              <b>About Instructor</b>
+            </p>
+            <Flex gap={10}>
+              <Avatar size={60} src={courseDetail.author.imageUrl} icon={<UserOutlined />} alt="Profile" />
+              <div>
+                <h4>{courseDetail.author.name}</h4>
+                <p>{courseDetail.author.designation}</p>
+              </div>
+            </Flex>
+          </div>
+        </div>
+      </Flex>
     </section>
   );
 };

@@ -7,8 +7,9 @@ import * as z from "zod";
 import { errorHandler } from "@/lib/api-middlewares/errorHandler";
 import { getToken } from "next-auth/jwt";
 import { getCookieName } from "@/lib/utils";
-import { ResourceContentType } from "@prisma/client";
+import { ResourceContentType, Role } from "@prisma/client";
 import updateCourseProgress from "@/actions/updateCourseProgress";
+import { getCourseAccessRole } from "@/actions/getCourseAccessRole";
 
 export const validateReqBody = z.object({
   resourceId: z.number(),
@@ -27,24 +28,47 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const userId = token?.id;
     const body = await req.body;
     const { resourceId, courseId } = body;
-    const isEnrolled = await prisma.courseRegistration.findUnique({
+
+    const hasAccess = await getCourseAccessRole(token?.role, userId, Number(courseId));
+
+    let pId = hasAccess.productId;
+    const cr = await prisma.courseRegistration.findFirst({
       where: {
-        studentId_courseId: {
-          studentId: String(userId),
-          courseId: Number(courseId),
+        studentId: token?.id,
+        order: {
+          productId: pId,
         },
       },
       select: {
-        courseId: true,
+        registrationId: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        certificate: {
+          select: {
+            productId: true,
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
+    const isExist = cr?.certificate.find((c) => c.productId === Number(courseId));
 
-    if (isEnrolled?.courseId) {
+    if (hasAccess.role === Role.STUDENT) {
       const courseProgress = await updateCourseProgress(
         Number(courseId),
         Number(resourceId),
         String(token?.id),
-        ResourceContentType.Video
+        ResourceContentType.Video,
+        cr?.registrationId,
+        typeof isExist !== "undefined",
+
+        hasAccess.isLearningPath ? hasAccess.productId : undefined
       );
 
       if (courseProgress) {
@@ -57,10 +81,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
         });
       } else {
-        res.status(400).json({ success: false, error: "You are not enrolled in this course" });
+        res.status(400).json({ success: false, error: "Unable to update the course progress" });
       }
     } else {
-      res.status(400).json({ success: false, error: "You are not enrolled in this course" });
+      res.status(403).json({ success: false, error: "You are not enrolled in this course" });
     }
   } catch (error) {
     return errorHandler(error, res);

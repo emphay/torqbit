@@ -5,6 +5,8 @@ import { withAuthentication } from "@/lib/api-middlewares/with-authentication";
 import { getCookieName } from "@/lib/utils";
 import { getToken } from "next-auth/jwt";
 import getLessonDetail from "@/actions/getLessonDetail";
+import { getCourseAccessRole } from "@/actions/getCourseAccessRole";
+import { getPercentage } from "@/services/helper";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
@@ -24,7 +26,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     let previewMode;
     let estimatedDuration;
 
-    const detail = await getLessonDetail(Number(courseId), token?.role, token?.id);
+    const hasAccess = await getCourseAccessRole(token?.role, token?.id, Number(courseId));
+
+    const detail = await getLessonDetail(
+      Number(courseId),
+      hasAccess?.role,
+      token?.id,
+      hasAccess.isLearningPath ? hasAccess.productId : undefined
+    );
 
     if (detail?.lessonDetail && detail.lessonDetail.length > 0) {
       courseName = detail?.lessonDetail[0].courseName;
@@ -46,6 +55,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             isWatched: r.watchedRes != null,
             contentType: r.contentType,
             estimatedDuration: r.estimatedDuration,
+            assignmentStatus: r.assignmentStatus,
           });
         } else {
           chapterLessons.push({
@@ -62,11 +72,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
                 isWatched: r.watchedRes != null,
                 contentType: r.contentType,
                 estimatedDuration: r.estimatedDuration,
+                assignmentStatus: r.assignmentStatus,
               },
             ],
           });
         }
       });
+
+    let totalLessons =
+      chapterLessons.map((l) => l.lessons).length > 0 ? chapterLessons.map((l) => l.lessons)[0].length : 0;
+    let watchedLessons =
+      chapterLessons.map((l) => l.lessons).length > 0
+        ? chapterLessons.map((l) => l.lessons.filter((f: any) => f.isWatched == true))[0].length
+        : 0;
+    const progress = getPercentage(watchedLessons, totalLessons);
+
     return res.status(200).json({
       success: true,
       statusCode: 200,
@@ -75,7 +95,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         name: courseName,
         description: description,
         previewMode: previewMode === 1 ? true : false,
-        userRole: detail?.userRole,
+        userRole: hasAccess?.role,
+        progress,
       },
       lessons: chapterLessons,
     });

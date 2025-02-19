@@ -41,7 +41,7 @@ const Feedback = () => {
             <>
               {feedback.mailSent ? (
                 <div className={styles.feedbackSentMessage}>
-                  <i>{SvgIcons.check}</i>
+                  <i style={{ lineHeight: 0, fontSize: 18, color: "var(--font-secondary)" }}>{SvgIcons.check}</i>
                   <p>Your feedback has been received!</p>
                 </div>
               ) : (
@@ -68,11 +68,7 @@ const Feedback = () => {
             }
           }}
         >
-          {
-            <i style={{ stroke: globalState.theme == "dark" ? "#939db8" : "#666", cursor: "pointer" }}>
-              {SvgIcons.chat}
-            </i>
-          }
+          {<i style={{ cursor: "pointer" }}>{SvgIcons.chat}</i>}
         </Popover>
       </div>
     </Tooltip>

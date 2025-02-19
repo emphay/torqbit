@@ -18,17 +18,20 @@ import {
 import { Flex } from "antd";
 import * as React from "react";
 import PurifyContent from "../PurifyContent/PurifyContent";
+import { PageSiteConfig } from "@/services/siteConstant";
+import { getSiteConfig } from "@/services/getSiteConfig";
 interface IProps {
   configData: IEventAccessDeniedMailConfig;
 }
 
 export const EventAccessDeniedEmail = ({ configData }: IProps) => {
+  const { site }: { site: PageSiteConfig } = getSiteConfig();
   return (
     <Tailwind>
       <Html>
         <Head />
 
-        <Preview>{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`}</Preview>
+        <Preview>{`${site.brand?.name}`}</Preview>
 
         <Head>
           <style></style>
@@ -40,7 +43,7 @@ export const EventAccessDeniedEmail = ({ configData }: IProps) => {
                 height={50}
                 width={50}
                 style={{ display: "unset" }}
-                src={`https://cdn.torqbit.com/static/torq.png`}
+                src={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/${site.brand?.icon}`}
               />
             </Heading>
             <Hr className="border border-solid border-[#eaeaea]  mx-0 w-full" />
@@ -62,7 +65,7 @@ export const EventAccessDeniedEmail = ({ configData }: IProps) => {
               <Text className="text-[#000] text-[15px] m-0 ">
                 Thanks & Regards <br />
               </Text>
-              <Text className="text-black text-[15px] my-2">{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`} team</Text>
+              <Text className="text-black text-[15px] my-2">{`${site.brand?.name}`} team</Text>
             </Section>
           </Container>
         </Body>

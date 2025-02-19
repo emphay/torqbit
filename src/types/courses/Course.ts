@@ -11,13 +11,50 @@ import {
   Video,
   VideoState,
   courseDifficultyType,
+  submissionStatus,
 } from "@prisma/client";
+import { IAssignmentDetails, IAssignmentSubmissionDetail, IEvaluationResult } from "./assignment";
+
+export interface IEnrolledListResponse {
+  studentName: string;
+  dateJoined: string;
+  lastActivity?: string;
+  progress: number;
+}
+
+export interface ICourseEnrollmentProps {
+  courseInfo: {
+    expiryDate: Date;
+    courseId: number;
+    authorId: string;
+    coursePrice: number;
+    slug: string;
+    name: string;
+    tvThumbnail: string;
+  };
+  studentInfo: {
+    studentId: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+export interface IRegisteredCoursesList {
+  courseName: string;
+  isExpired: boolean;
+  progress: string;
+  courseId: number;
+  slug: string;
+}
+[];
 
 export interface IHeroCoursePreview {
   courseName: string;
   authorImage: string;
   authorName: string;
   courseTrailer: string;
+  userRole?: Role;
 }
 
 export interface ChapterDetail {
@@ -31,12 +68,31 @@ export interface ChapterDetail {
   name: string;
   resource: IResourceDetail[];
 }
+
+export interface ICourseListItem {
+  id: number;
+  slug: string;
+  title: string;
+  difficultyLevel: courseDifficultyType;
+  author: string;
+  description: string;
+  price: number;
+  currency: string;
+  state: StateType;
+  trailerThumbnail: string | null;
+  userRole?: Role;
+}
+
 export interface IAssignmentDetail {
+  submission: IAssignmentSubmissionDetail;
+  evaluatedData: IEvaluationResult;
   assignmentId: number;
-  content: string;
-  assignmentFiles: string[];
+  content: IAssignmentDetails;
+  passingScore: number;
+  maximumScore: number;
   name?: string;
-  estimatedDuration: number;
+  status?: submissionStatus;
+  estimatedDurationInMins: number;
 }
 export interface VideoLesson {
   videoId: number;
@@ -48,6 +104,7 @@ export interface VideoLesson {
   title: string;
   contentType?: ResourceContentType;
   estimatedDuration?: number;
+  assignmentStatus?: submissionStatus;
 }
 export interface CourseLessons {
   chapterSeq: number;
@@ -64,11 +121,23 @@ export interface ICertificateReponse {
 export interface ICertificateInfo {
   studentId: string;
   courseId: number;
+  slug: string;
   authorName: string;
   courseName: string;
   studentEmail: string;
   studentName: string;
   certificateTemplate: string;
+}
+
+export interface IEventCertificateInfo {
+  eventId: number;
+  authorName: string;
+  eventName: string;
+  studentEmail: string;
+  studentName: string;
+  certificateTemplate: string;
+  slug: string;
+  registrationId: number;
 }
 
 export interface StaticVideoLesson {
@@ -104,7 +173,6 @@ export interface ICoursePreviewDetail {
   chapterName?: string;
   watchedRes?: number;
   courseState: StateType;
-  thumbnail?: string;
   difficultyLevel?: courseDifficultyType;
   authorImage?: string;
   authorName?: string;
@@ -120,16 +188,57 @@ export interface ICoursePriviewInfo {
   courseTrailer: string;
   previewMode: boolean;
   courseType: CourseType;
+  currency: string;
   coursePrice: number;
   userRole: Role;
   progress: number;
   totalWatched: number;
   courseState: $Enums.StateType;
-  thumbnail: string;
+  tvThumbnail: string;
   difficultyLevel: $Enums.courseDifficultyType;
   authorImage: string;
   authorName: string;
   userStatus: CourseState;
+}
+
+export interface ILessonView {
+  name: string;
+  description: string;
+  sequenceId?: number;
+  state: StateType;
+  lessonType: ResourceContentType;
+  durationInMins: number;
+}
+
+export interface IChapterView {
+  name: string;
+  description: string;
+  lessons: ILessonView[];
+}
+export interface ICourseDetailView {
+  id: number;
+  name: string;
+  description: string;
+  expiryInDays: number;
+  state?: string;
+  chapters: IChapterView[];
+  difficultyLevel: $Enums.courseDifficultyType;
+  contentDurationInHrs: number;
+  assignmentsCount: number;
+  role: Role;
+  enrolmentDate: string | null;
+  remainingDays: number | null;
+  pricing: {
+    currency: string;
+    amount: number;
+  };
+  author: {
+    name: string;
+    imageUrl?: string | null;
+    designation?: string;
+  };
+  trailerEmbedUrl?: string;
+  certificateId?: string | null;
 }
 
 export interface CourseLessonAPIResponse {
@@ -144,6 +253,7 @@ export interface CourseAPIResponse {
   statusCode: number;
   message: string;
   courseDetails: CourseInfo;
+  currency: string;
 }
 export interface CourseData {
   name: string;
@@ -153,8 +263,10 @@ export interface CourseData {
   chapters: ChapterDetail[];
   difficultyLevel?: courseDifficultyType;
   certificateTemplate?: string;
+  currency?: string;
   courseType?: string;
   coursePrice?: number;
+  thumbnail?: string;
 }
 export interface CourseInfo {
   about: string;
@@ -174,6 +286,7 @@ export interface CourseInfo {
   chapters: ChapterDetail[];
   courseId: number;
   coursePrice: number;
+  currency: string;
   courseType: string;
   createdAt: string;
   description: string;
@@ -286,6 +399,8 @@ export interface ILessonPreviewDetail {
   description?: string;
   previewMode?: number;
   lessonDescription?: string;
+  assignmentStatus?: submissionStatus;
+
   videoId?: string;
   videoUrl?: string;
   videoDuration?: number;

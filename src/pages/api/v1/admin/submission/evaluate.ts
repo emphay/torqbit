@@ -9,8 +9,8 @@ import { ResourceContentType, Role, submissionStatus } from "@prisma/client";
 import getUserRole from "@/actions/getRole";
 import appConstant from "@/services/appConstant";
 import updateCourseProgress from "@/actions/updateCourseProgress";
-import MailerService from "@/services/MailerService";
 import { IAssignmentCompletionConfig } from "@/lib/emailConfig";
+import EmailManagementService from "@/services/cms/email/EmailManagementService";
 export const config = {
   api: {
     bodyParser: {
@@ -49,6 +49,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
                       chapter: {
                         select: {
                           courseId: true,
+                          course: {
+                            select: {
+                              slug: true,
+                            },
+                          },
                         },
                       },
                     },
@@ -61,6 +66,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       let courseId = evaluationDetail.submission.assignment.lesson.chapter.courseId;
+      let courseSlug = evaluationDetail.submission.assignment.lesson.chapter.course.slug;
+
       let lessonId = evaluationDetail.submission.assignment.lesson.resourceId;
       let studentId = evaluationDetail.submission.studentId;
 
@@ -108,14 +115,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         evaluationDetail.score >= appConstant.assignmentPassingMarks ||
         submissionAttempt.filter((f) => f.status === submissionStatus.FAILED).length === 3
       ) {
-        await updateCourseProgress(
-          Number(courseId),
-          Number(lessonId),
-          String(studentId),
-          ResourceContentType.Assignment,
-          findTotalLessons?.totalResources,
-          findTotalWatched
-        );
+        // await updateCourseProgress(
+        //   Number(courseId),
+        //   Number(lessonId),
+        //   String(studentId),
+        //   ResourceContentType.Assignment,
+        //   findTotalLessons?.totalResources,
+        //   findTotalWatched
+        // );
       }
 
       const userDetail = await prisma.user.findUnique({
@@ -133,12 +140,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         assignmentName: evaluationDetail.submission.assignment.lesson.name,
         score: evaluationDetail.score,
         submissionDate: convertToDayMonthTime(new Date(evaluationDetail.submission.createdAt)),
-        url: `${process.env.NEXTAUTH_URL}/courses/${courseId}/lesson/${lessonId}?tab=submission&segment=evaluations`,
+        url: `${process.env.NEXTAUTH_URL}/courses/${courseSlug}/lesson/${lessonId}?tab=submission&segment=evaluations`,
       };
+      const ms = await EmailManagementService.getMailerService();
 
-      MailerService.sendMail("ASSIGNMENT_COMPLETION", configData).then((result) => {
-        console.log(result.error);
-      });
+      ms &&
+        ms.sendMail("ASSIGNMENT_COMPLETION", configData).then((result) => {
+          console.log(result.error);
+        });
       return res.status(200).json({ success: true, message: "Evaluation has been completed", evaluationDetail });
     } else {
       return res.status(403).json({ success: false, error: "You are not authorized" });

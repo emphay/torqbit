@@ -1,4 +1,6 @@
+import { AnalyticsDuration, AnalyticsType, IAnalyticResponse, IAnalyticStats } from "@/types/courses/analytics";
 import { getFetch } from "./request";
+import { APIResponse } from "@/types/apis";
 export type UserAnalyseData = {
   year: any;
   month: any;
@@ -8,6 +10,7 @@ export type ApiResponse = {
   success: boolean;
   error: string;
   message: string;
+
   totalMembers: number;
   totalEnrolled: number;
   activeMembers: number;
@@ -89,6 +92,40 @@ class AnalyticsSerivce {
           onSuccess(apiResponse);
         });
       }
+    });
+  };
+
+  overviewStats = (onSuccess: (response: IAnalyticStats[]) => void, onFailure: (message: string) => void) => {
+    getFetch(`/api/v1/admin/analytics/overview`).then((result) => {
+      result.json().then((r) => {
+        const apiResponse = r as APIResponse<IAnalyticStats[]>;
+        apiResponse.body ? onSuccess(apiResponse.body) : onFailure(`${apiResponse.error}`);
+      });
+    });
+  };
+  overviewStatsByProduct = (
+    productId: number,
+    onSuccess: (response: IAnalyticStats[]) => void,
+    onFailure: (message: string) => void
+  ) => {
+    getFetch(`/api/v1/course/${productId}/analytics/overview`).then((result) => {
+      result.json().then((r) => {
+        const apiResponse = r as APIResponse<IAnalyticStats[]>;
+        apiResponse.body ? onSuccess(apiResponse.body) : onFailure(`${apiResponse.error}`);
+      });
+    });
+  };
+  analyticStats = (
+    duration: AnalyticsDuration,
+    type: AnalyticsType,
+    onSuccess: (response: IAnalyticResponse) => void,
+    onFailure: (message: string) => void
+  ) => {
+    getFetch(`/api/v1/admin/analytics/get/${duration}?type=${type}`).then((result) => {
+      result.json().then((r) => {
+        const apiResponse = r as APIResponse<IAnalyticResponse>;
+        apiResponse.body ? onSuccess(apiResponse.body) : onFailure(`${apiResponse.error}`);
+      });
     });
   };
 }

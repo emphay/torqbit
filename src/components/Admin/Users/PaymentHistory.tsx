@@ -7,7 +7,7 @@ import { Flex, message, Table, Tag } from "antd";
 import Link from "next/link";
 import { FC, useEffect, useState } from "react";
 
-const PaymentHistory: FC = () => {
+const PaymentHistory: FC<{ activeTab: string }> = ({ activeTab }) => {
   const [messageApi, contextMessageHolder] = message.useMessage();
 
   const [paymentData, setPaymentData] = useState<{
@@ -58,7 +58,8 @@ const PaymentHistory: FC = () => {
           {OrderDetail.status === $Enums.paymentStatus.SUCCESS && (
             <Link href={`/setting/invoice/download/${OrderDetail.invoiceId}`} target="_blank">
               <Flex align="center" gap={5} justify="center">
-                {SvgIcons.download} Download
+                <i style={{ fontSize: 18, lineHeight: 0 }}>{SvgIcons.download}</i>
+                Download
               </Flex>{" "}
             </Link>
           )}
@@ -82,7 +83,6 @@ const PaymentHistory: FC = () => {
     try {
       setPaymentData({ ...paymentData, loading: true });
       const res = await getFetch("/api/v1/course/payment/history");
-
       const result = await res.json();
 
       if (result.success) {
@@ -101,8 +101,8 @@ const PaymentHistory: FC = () => {
   };
 
   useEffect(() => {
-    getPaymentData();
-  }, []);
+    activeTab === "payment" && getPaymentData();
+  }, [activeTab]);
 
   return (
     <>

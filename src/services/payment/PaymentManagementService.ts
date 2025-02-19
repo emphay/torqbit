@@ -1,4 +1,16 @@
-import { $Enums, paymentMode } from "@prisma/client";
+import {
+  $Enums,
+  ConfigurationState,
+  CourseRegistration,
+  CourseType,
+  EntityType,
+  gatewayProvider,
+  NotificationType,
+  Order,
+  orderStatus,
+  paymentStatus,
+  ServiceType,
+} from "@prisma/client";
 
 import prisma from "@/lib/prisma";
 import appConstant from "../appConstant";
@@ -8,20 +20,323 @@ import {
   PaymentServiceProvider,
   UserConfig,
   GatewayConfig,
-  CashFreeConfig,
-  OrderDetail,
   OrderHistory,
+  CFPaymentsConfig,
+  InvoiceData,
+  paymentCustomerDetail,
+  ISuccessPaymentData,
+  latestOrderDetail,
 } from "@/types/payment";
 import { CashfreePaymentProvider } from "./CashfreePaymentProvider";
+import SecretsManager from "../secrets/SecretsManager";
+import { APIResponse } from "@/types/apis";
+import { BillingService } from "../BillingService";
+import { businessConfig } from "../businessConfig";
+import { addDays, generateDayAndYear } from "@/lib/utils";
+import os from "os";
+import path from "path";
+import { ISendNotificationProps } from "@/types/notification";
+import NotificationHandler from "@/actions/notification";
 
+export const paymentsConstants = {
+  CF_CLIENT_ID: "CLIENT_ID",
+  CF_CLIENT_SECRET: "CLIENT_SECRET",
+};
 export class PaymentManagemetService {
-  getPaymentProvider = (config: GatewayConfig): PaymentServiceProvider => {
+  serviceType: ServiceType = ServiceType.PAYMENTS;
+  defaultGateway: string = "CASHFREE";
+
+  handleWebhook = async (gateway: string, signature: string, payload: string): Promise<APIResponse<any>> => {
+    switch (gateway) {
+      case gatewayProvider.CASHFREE:
+        const secretStore = SecretsManager.getSecretsProvider();
+
+        const clientId = await secretStore.get(paymentsConstants.CF_CLIENT_ID);
+        const clientSecret = await secretStore.get(paymentsConstants.CF_CLIENT_SECRET);
+        if (clientId && clientSecret) {
+          const isVerified = await new CashfreePaymentProvider(clientId, clientSecret).verifyWebhook(
+            signature,
+            payload
+          );
+          console.log(isVerified, "checking in payment service");
+          return new APIResponse(
+            isVerified,
+            isVerified ? 200 : 400,
+            isVerified ? "Webhook has been verified" : "Unable to verify the webhook signature"
+          );
+        } else {
+          return new APIResponse<any>(false, 404, "No configuration found for the given payment gateway");
+        }
+
+      default:
+        return new APIResponse<any>(false, 404, "No configuration found for the given payment gateway");
+    }
+  };
+
+  getGatewayConfig = async (gateway: string): Promise<APIResponse<any>> => {
+    switch (gateway) {
+      case $Enums.gatewayProvider.CASHFREE:
+        const cf = await prisma.serviceProvider.findUnique({
+          select: {
+            providerDetail: true,
+            state: true,
+          },
+          where: {
+            service_type: this.serviceType,
+            provider_name: gateway,
+          },
+        });
+        if (cf) {
+          return new APIResponse<any>(true, 200, "Succesfully fetched the gateway configuration", {
+            state: cf.state,
+            config: cf.providerDetail,
+          });
+        } else {
+          return new APIResponse<any>(false, 404, "Payment gateway has not been configured");
+        }
+      default:
+        return new APIResponse<any>(false, 404, "No configuration found for the given payment gateway");
+    }
+  };
+
+  verifyConnection = async (
+    gateway: string,
+    clientId: string,
+    clientSecret: string,
+    config: GatewayConfig
+  ): Promise<APIResponse<void>> => {
+    switch (gateway) {
+      case $Enums.gatewayProvider.CASHFREE:
+        const cf = new CashfreePaymentProvider(clientId, clientSecret);
+        const result = await cf.testClientCredentials();
+        const success = result != 401;
+        const message =
+          result == 401
+            ? `Invalid crendentials. Check the credentials again`
+            : `Succesfully authenticated with the given credentials.`;
+        if (success) {
+          //save the config
+          const cfConfig: CFPaymentsConfig = {
+            name: $Enums.gatewayProvider.CASHFREE,
+            auth: {
+              secretId: clientSecret,
+              clientId: clientId,
+            },
+            paymentConfig: config.paymentConfig,
+          };
+          this.saveConfig(cfConfig, ConfigurationState.AUTHENTICATED);
+        }
+        return new APIResponse(result != 401, result, message, undefined, result == 401 ? message : undefined);
+
+      default:
+        throw new Error(`No implementation found for the payment gateway - ${gateway}`);
+    }
+  };
+
+  saveConfig = async (config: GatewayConfig, configurationState: ConfigurationState): Promise<APIResponse<void>> => {
     switch (config.name) {
       case $Enums.gatewayProvider.CASHFREE:
-        let c = config as CashFreeConfig;
-        return new CashfreePaymentProvider(c.clientId, c.secretId);
+        const c = config as CFPaymentsConfig;
+        const secretStore = SecretsManager.getSecretsProvider();
+        const count = await prisma.serviceProvider.count({
+          where: {
+            service_type: this.serviceType,
+          },
+        });
+        if (count > 0) {
+          await prisma.serviceProvider.updateMany({
+            data: {
+              providerDetail: c.paymentConfig,
+              state: configurationState,
+            },
+            where: {
+              service_type: this.serviceType,
+            },
+          });
+        } else {
+          await prisma.serviceProvider.create({
+            data: {
+              provider_name: $Enums.gatewayProvider.CASHFREE,
+              service_type: this.serviceType,
+              providerDetail: c.paymentConfig,
+              state: configurationState,
+            },
+          });
+        }
+
+        if (c.auth) {
+          await secretStore.put(paymentsConstants.CF_CLIENT_ID, c.auth.clientId);
+          await secretStore.put(paymentsConstants.CF_CLIENT_SECRET, c.auth.secretId);
+        }
+        return new APIResponse<void>(true, 200, `Successfully saved the payments configuration`);
+
       default:
-        throw new Error("Unable to find the payment provider! contact with support team");
+        return new APIResponse<void>(
+          false,
+          400,
+          `Failed to save the payments configuration`,
+          undefined,
+          `Payment configuration not found`
+        );
+    }
+  };
+
+  getPaymentProvider = async (gatewayName: string): Promise<PaymentServiceProvider> => {
+    switch (gatewayName) {
+      case $Enums.gatewayProvider.CASHFREE:
+        const secretStore = SecretsManager.getSecretsProvider();
+        try {
+          const clientId = await secretStore.get(paymentsConstants.CF_CLIENT_ID);
+          const clientSecret = await secretStore.get(paymentsConstants.CF_CLIENT_SECRET);
+          if (clientId && clientSecret) {
+            return new CashfreePaymentProvider(clientId, clientSecret);
+          } else {
+            throw new Error("Access key and secret for Cashfree not found");
+          }
+        } catch (error) {
+          throw error;
+        }
+
+      default:
+        throw new Error("Unable to find the payment provider! Contact your support team");
+    }
+  };
+
+  async processRegistration(
+    productId: number,
+    customerDetail: paymentCustomerDetail,
+    orderId: string,
+    paymentData: ISuccessPaymentData
+  ): Promise<APIResponse<CourseRegistration | undefined>> {
+    try {
+      const courseDetail = await prisma.course.findUnique({
+        where: {
+          courseId: productId,
+        },
+        select: {
+          expiryInDays: true,
+          slug: true,
+          name: true,
+          tvThumbnail: true,
+          coursePrice: true,
+          authorId: true,
+          courseId: true,
+        },
+      });
+
+      const courseExpiryDate = courseDetail && addDays(Number(courseDetail.expiryInDays));
+
+      const isRegistered = await prisma.courseRegistration.findUnique({
+        where: {
+          orderId,
+        },
+        select: {
+          registrationId: true,
+        },
+      });
+
+      const courseRegistrationDetail =
+        !isRegistered &&
+        (await prisma.courseRegistration.create({
+          data: {
+            studentId: customerDetail.id,
+            expireIn: courseExpiryDate,
+            courseState: $Enums.CourseState.ENROLLED,
+            courseType: $Enums.CourseType.PAID,
+            orderId: orderId,
+          },
+        }));
+
+      const invoiceData = await prisma.invoice.create({
+        data: {
+          studentId: customerDetail.id,
+          taxRate: appConstant.payment.taxRate,
+          taxIncluded: true,
+          paidDate: String(paymentData.paymentTime),
+          amountPaid: Number(paymentData.amount),
+          orderId: String(paymentData.gatewayOrderId),
+          items: { courses: [Number(courseDetail?.courseId)] },
+        },
+      });
+
+      const invoiceConfig: InvoiceData = {
+        courseDetail: {
+          courseId: Number(courseDetail?.courseId),
+          courseName: String(courseDetail?.name),
+          slug: String(courseDetail?.slug),
+          validUpTo: generateDayAndYear(addDays(Number(courseDetail?.expiryInDays))),
+          thumbnail: String(courseDetail?.tvThumbnail),
+        },
+
+        totalAmount: Number(paymentData.amount),
+        currency: String(paymentData.currency),
+        businessInfo: {
+          gstNumber: businessConfig.gstNumber,
+          panNumber: businessConfig.panNumber,
+          address: businessConfig.address,
+          state: businessConfig.state,
+          country: businessConfig.country,
+          taxRate: Number(invoiceData.taxRate),
+          taxIncluded: invoiceData.taxIncluded,
+          platformName: appConstant.platformName,
+        },
+        stundentInfo: {
+          name: customerDetail.name,
+          email: customerDetail.email,
+          phone: customerDetail.phone,
+        },
+
+        invoiceNumber: Number(invoiceData.id),
+      };
+
+      let homeDir = os.homedir();
+      const savePath = path.join(
+        homeDir,
+        `${appConstant.homeDirName}/${appConstant.staticFileDirName}/${invoiceData.id}_invoice.pdf`
+      );
+
+      let notificationData: ISendNotificationProps = {
+        notificationType: NotificationType.ENROLLED,
+        recipientId: String(courseDetail?.authorId),
+        subjectId: String(customerDetail.id),
+        subjectType: EntityType.USER,
+        objectId: String(courseDetail?.courseId),
+        objectType: EntityType.COURSE,
+      };
+
+      NotificationHandler.createNotification(notificationData);
+
+      await new BillingService().sendInvoice(invoiceConfig, savePath);
+
+      return new APIResponse(true, 200, "Course has been purchased", courseRegistrationDetail || undefined);
+    } catch (error: any) {
+      return new APIResponse(false, 400, error);
+    }
+  }
+
+  updateOrder = async (orderId: string): Promise<APIResponse<paymentStatus>> => {
+    const OrderDetail = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+      select: {
+        paymentGateway: true,
+        gatewayOrderId: true,
+      },
+    });
+    if (OrderDetail?.gatewayOrderId) {
+      switch (OrderDetail?.paymentGateway) {
+        case $Enums.gatewayProvider.CASHFREE:
+          const cf = await this.getPaymentProvider(OrderDetail.paymentGateway);
+          const response = await cf.updateOrder(orderId, OrderDetail.gatewayOrderId, this.processRegistration);
+
+          return new APIResponse(response.success, response.status, response.message, response.body);
+
+        default:
+          return new APIResponse(false, 404, "Unable to find the payment provider! Contact your support team");
+      }
+    } else {
+      return new APIResponse(false, 404, "Order detail is missing");
     }
   };
 
@@ -31,6 +346,7 @@ export class PaymentManagemetService {
   ): Promise<{
     status: string | null;
     paymentDisable: boolean;
+    orderId: string;
     alertType: string;
     alertMessage: string;
     alertDescription: string;
@@ -38,40 +354,44 @@ export class PaymentManagemetService {
     switch (gatewayProvider) {
       case $Enums.gatewayProvider.CASHFREE:
         let currentTime = new Date().getTime();
-        const getDetail = await prisma.cashfreeOrder.findFirst({
+        const getDetail = await prisma.order.findUnique({
           where: {
             gatewayOrderId: orderId,
           },
           select: {
+            id: true,
             createdAt: true,
-            gatewayStatus: true,
-          },
-          orderBy: {
-            createdAt: "desc",
+            updatedAt: true,
+            paymentStatus: true,
           },
         });
         if (getDetail) {
-          let progressTime = getDetail.createdAt.getTime() + appConstant.payment.lockoutMinutes;
-          if (getDetail.gatewayStatus === $Enums.cashfreePaymentStatus.FAILED) {
+          let progressTime = getDetail.updatedAt.getTime() + appConstant.payment.lockoutMinutes;
+          if (getDetail.paymentStatus === paymentStatus.FAILED) {
             return {
-              status: getDetail.gatewayStatus,
+              status: getDetail.paymentStatus,
               paymentDisable: false,
+              orderId: getDetail.id,
               alertType: "error",
               alertMessage: "Payment Failed",
               alertDescription: "Your payment has failed. Please contact support if you have any questions",
             };
-          } else if (getDetail.gatewayStatus === $Enums.cashfreePaymentStatus.USER_DROPPED) {
+          } else if (getDetail.paymentStatus === paymentStatus.USER_DROPPED) {
             return {
-              status: getDetail.gatewayStatus,
+              status: getDetail.paymentStatus,
               paymentDisable: false,
+              orderId: getDetail.id,
+
               alertType: "warning",
               alertMessage: "Payment Dropped",
               alertDescription: "Your payment has been dropped. Please contact support if you have any questions",
             };
-          } else if (getDetail.gatewayStatus === $Enums.cashfreePaymentStatus.SUCCESS) {
+          } else if (getDetail.paymentStatus === paymentStatus.SUCCESS) {
             return {
-              status: getDetail.gatewayStatus as string,
+              status: getDetail.paymentStatus as string,
               paymentDisable: false,
+              orderId: getDetail.id,
+
               alertType: "success",
               alertMessage: "Payment Successful",
               alertDescription: "Congratulations you have successfully purchased this course",
@@ -80,16 +400,20 @@ export class PaymentManagemetService {
             if (progressTime > currentTime) {
               let remainingTime = (progressTime - currentTime) / 1000;
               return {
-                status: getDetail.gatewayStatus,
+                status: getDetail.paymentStatus,
                 paymentDisable: remainingTime > 0 ? true : false,
                 alertType: "warning",
+                orderId: getDetail.id,
+
                 alertMessage: "Payment Pending",
                 alertDescription: "Your payment is pending. Please contact support if you have any questions",
               };
             } else {
               return {
-                status: getDetail.gatewayStatus,
+                status: getDetail.paymentStatus,
                 paymentDisable: false,
+                orderId: getDetail.id,
+
                 alertType: "warning",
                 alertMessage: "Payment Pending",
                 alertDescription: "Your payment is pending. Please contact support if you have any questions",
@@ -103,61 +427,73 @@ export class PaymentManagemetService {
     }
   };
 
-  getLatestOrder = async (studentId: string, courseId: number): Promise<OrderDetail | null> => {
+  getLatestOrder = async (studentId: string, productId: number): Promise<latestOrderDetail | undefined> => {
     const latestOrder = await prisma.order.findFirst({
       where: {
-        studentId: studentId,
-        courseId: courseId,
+        studentId,
+        productId,
+      },
+      select: {
+        orderStatus: true,
+        id: true,
+        updatedAt: true,
+        registeredCourse: {
+          select: {
+            expireIn: true,
+          },
+        },
       },
 
       orderBy: {
         createdAt: "desc",
       },
     });
-    return latestOrder as OrderDetail | null;
+    return latestOrder || undefined;
   };
 
   getOrderHistoryByUser = async (studentId: string): Promise<OrderHistory[]> => {
     const orders = await prisma.$queryRaw<
       any[]
-    >`SELECT o.latestStatus as status,o.amount,o.updatedAt as paymentDate,o.courseId,o.orderId,o.currency,co.name as courseName,invoice.id as invoiceId FROM \`Order\` AS o  
-    INNER JOIN Course as co ON co.courseId = o.courseId
-       LEFT OUTER JOIN Invoice as invoice ON invoice.studentId = ${studentId}  AND invoice.orderId = o.orderId
-     WHERE o.studentId = ${studentId} AND o.updatedAt =  (SELECT MAX(updatedAt)
-    FROM \`Order\` AS b 
-    WHERE o.courseId = b.courseId AND o.studentId = ${studentId}) ORDER BY o.updatedAt ASC`;
+    >`SELECT o.orderStatus as status,o.amount,o.updatedAt as paymentDate,o.productId,o.gatewayOrderId,o.currency,co.name as courseName,invoice.id as invoiceId FROM \`Order\` AS o  
+    INNER JOIN Course as co ON co.courseId = o.productId AND co.coursePrice > 0 AND o.orderStatus = ${orderStatus.SUCCESS}
 
+    LEFT OUTER JOIN Invoice as invoice ON invoice.studentId = ${studentId}  AND invoice.orderId = o.gatewayOrderId 
+    WHERE o.studentId = ${studentId} AND o.updatedAt =  (SELECT MAX(updatedAt) 
+    FROM \`Order\` AS b 
+    WHERE o.productId = b.productId AND o.studentId = ${studentId}) ORDER BY o.updatedAt ASC`;
     return orders;
   };
 
   processPayment = async (
     userConfig: UserConfig,
-    courseConfig: CoursePaymentConfig,
-    gatewayConfig: GatewayConfig
-  ): Promise<PaymentApiResponse> => {
+    courseConfig: CoursePaymentConfig
+  ): Promise<APIResponse<PaymentApiResponse>> => {
     const currentTime = new Date();
     const latestOrder = await this.getLatestOrder(userConfig.studentId, courseConfig.courseId);
-
     /**
      * if payment is in success state
      */
 
-    if (latestOrder && latestOrder.latestStatus === $Enums.paymentStatus.SUCCESS) {
-      return { success: false, error: "You have already purchased this course" };
+    if (
+      latestOrder &&
+      latestOrder.orderStatus === orderStatus.SUCCESS &&
+      latestOrder.registeredCourse &&
+      (!latestOrder.registeredCourse.expireIn ||
+        (latestOrder.registeredCourse.expireIn &&
+          latestOrder.registeredCourse.expireIn?.getTime() > new Date().getTime()))
+    ) {
+      return new APIResponse(false, 208, `You have already purchased this course`);
     }
 
     /**
      *  if payment is in initiated state
      */
 
-    if (latestOrder && latestOrder.latestStatus === $Enums.paymentStatus.INITIATED) {
-      const orderCreatedTime = new Date(latestOrder.createdAt).getTime();
+    if (latestOrder && latestOrder.orderStatus === orderStatus.INITIATED) {
+      const orderCreatedTime = new Date(latestOrder.updatedAt).getTime();
 
       if (orderCreatedTime + appConstant.payment.lockoutMinutes > currentTime.getTime()) {
-        return {
-          success: false,
-          error: `Your payment session is still active.`,
-        };
+        return new APIResponse(false, 102, `Your payment session is still active.`);
       }
     }
 
@@ -165,15 +501,20 @@ export class PaymentManagemetService {
      * if latest order is in failed state or not available
      */
     try {
-      const paymentProvider = this.getPaymentProvider(gatewayConfig);
-
-      if (!latestOrder || latestOrder.latestStatus === $Enums.paymentStatus.FAILED) {
+      const paymentProvider = await this.getPaymentProvider(this.defaultGateway);
+      if (
+        !latestOrder ||
+        latestOrder.orderStatus === orderStatus.FAILED ||
+        (latestOrder.registeredCourse &&
+          latestOrder.registeredCourse.expireIn &&
+          latestOrder.registeredCourse.expireIn.getTime() < new Date().getTime())
+      ) {
         const order = await prisma.order.create({
           data: {
             studentId: userConfig.studentId,
-            latestStatus: $Enums.paymentStatus.INITIATED,
-            courseId: courseConfig.courseId,
-            paymentGateway: gatewayConfig.name as $Enums.gatewayProvider,
+            orderStatus: orderStatus.INITIATED,
+            productId: courseConfig.courseId,
+            paymentGateway: this.defaultGateway as $Enums.gatewayProvider,
             amount: courseConfig.amount,
           },
           select: {
@@ -189,16 +530,14 @@ export class PaymentManagemetService {
        *   if payment is in pending state
        */
 
-      if (latestOrder.latestStatus === $Enums.paymentStatus.PENDING) {
+      if (latestOrder.orderStatus === orderStatus.PENDING) {
         const pendingPaymentResponse = await paymentProvider.purchaseCourse(courseConfig, userConfig, latestOrder.id);
         return pendingPaymentResponse;
       }
-    } catch (error) {
-      console.log(error);
 
-      return { success: false, error: "Unable to find the payment provider.Contact the support team" };
+      return new APIResponse(false, 500, "something went wrong.Contact the support team");
+    } catch (error: any) {
+      return new APIResponse<PaymentApiResponse>(false, 500, error.message);
     }
-
-    return { success: false, error: "something went wrong" };
   };
 }

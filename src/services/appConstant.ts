@@ -1,10 +1,91 @@
 export default {
   cmnErrorMsg: "Something went wrong. Please try again later",
   platformName: "TORQBIT",
+  certificateTemplate: "golden-standard",
   platformLogo: `/public/icon/torqbit.png`,
   courseTags: ["HTML", "CSS", "JS", "ReactJS"],
   assignmentLang: ["html", "css", "javascript", "java", "python", "go", "nodejs", "reactjs"],
   assignmentFiles: ["index.html", "global.css", "index.js", , "index.ts", "index.tsx", "index.jsx"],
+  documentExtensions: [
+    { value: "pdf", label: "PDF" },
+    { value: "docx", label: "Word" },
+    { value: "xlsx", label: "Excel" },
+    { value: "zip", label: "Archive" },
+  ],
+  projectFramework: [
+    {
+      label: "Static Web",
+      value: "STATIC_WEB",
+    },
+    {
+      label: "ReactJS",
+      value: "REACTJS",
+    },
+    {
+      label: "Next App",
+      value: "NEXT_APP",
+    },
+  ],
+  submissionTypes: [
+    {
+      label: "Programming Language",
+      value: "PROGRAMMING_LANG",
+    },
+    {
+      label: "Programming Project",
+      value: "PROGRAMMING_PROJECT",
+    },
+    {
+      label: "Text",
+      value: "TEXT",
+    },
+    {
+      label: "URL",
+      value: "URL",
+    },
+    {
+      label: "File",
+      value: "FILE",
+    },
+  ],
+  programmingLanguages: [
+    { key: "javascript", value: "JavaScript" },
+    { key: "python", value: "Python" },
+    { key: "java", value: "Java" },
+    { key: "cpp", value: "C++" },
+    { key: "csharp", value: "C#" },
+    { key: "ruby", value: "Ruby" },
+    { key: "php", value: "PHP" },
+    { key: "swift", value: "Swift" },
+    { key: "kotlin", value: "Kotlin" },
+    { key: "go", value: "Go" },
+    { key: "rust", value: "Rust" },
+    { key: "typescript", value: "TypeScript" },
+    { key: "dart", value: "Dart" },
+    { key: "scala", value: "Scala" },
+    { key: "perl", value: "Perl" },
+    { key: "haskell", value: "Haskell" },
+    { key: "lua", value: "Lua" },
+    { key: "shell", value: "Shell" },
+    { key: "r", value: "R" },
+    { key: "matlab", value: "MATLAB" },
+    { key: "objective_c", value: "Objective-C" },
+    { key: "assembly", value: "Assembly" },
+    { key: "visual_basic", value: "Visual Basic" },
+    { key: "fsharp", value: "F#" },
+    { key: "elixir", value: "Elixir" },
+    { key: "clojure", value: "Clojure" },
+    { key: "erlang", value: "Erlang" },
+    { key: "groovy", value: "Groovy" },
+    { key: "fortran", value: "Fortran" },
+    { key: "ada", value: "Ada" },
+    { key: "cobol", value: "COBOL" },
+    { key: "crystal", value: "Crystal" },
+    { key: "scheme", value: "Scheme" },
+    { key: "prolog", value: "Prolog" },
+    { key: "sql", value: "SQL" },
+  ],
+
   courseType: ["FREE", "PAID"],
   defaultPageSize: 5,
   address: "Your address",
@@ -12,6 +93,8 @@ export default {
   country: "Your country",
   privatePath: ["/add-course"],
   homeDirName: ".torqbit",
+  staticFileDirName: "static",
+  defaultCMSProvider: "bunny.net",
   attachmentFileFolder: "discussion-attachment",
   assignmentFileFolder: "assignment-files",
   certificateDirectory: "/courses/certificates/",
@@ -26,6 +109,7 @@ export default {
   mediaTempDir: "media",
   assignmentTempDir: "assignments",
   invoiceTempDir: "invoices",
+  currency: "INR",
 
   contacts: [
     {
@@ -50,9 +134,13 @@ export default {
     },
   ],
   payment: {
+    currency: "INR",
     lockoutMinutes: 30 * 1000,
     sessionExpiryDuration: 24 * 60 * 60 * 1000,
-    version: "2022-09-01",
+    cashfree: {
+      paymentMethods: "upi, nb, cc, dc,app",
+    },
+
     taxRate: 18,
   },
 
@@ -81,4 +169,15 @@ export default {
     white: "#fff",
     grey: "#eee",
   },
+
+  mimeType: {
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    csv: "text/csv",
+    pdf: "application/pdf",
+    txt: "text/plain",
+    jpg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+  } as any,
 };

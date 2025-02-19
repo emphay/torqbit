@@ -2,16 +2,27 @@ import prisma from "@/lib/prisma";
 import { NextApiResponse, NextApiRequest } from "next";
 import { withMethods } from "@/lib/api-middlewares/with-method";
 import { errorHandler } from "@/lib/api-middlewares/errorHandler";
+import { getCookieName } from "@/lib/utils";
+import { getToken } from "next-auth/jwt";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    await prisma.notification.update({
+    let cookieName = getCookieName();
+
+    const token = await getToken({
+      req,
+      secret: process.env.NEXT_PUBLIC_SECRET,
+      cookieName,
+    });
+
+    await prisma.notification.updateMany({
       where: {
-        id: Number(req.query.id),
-        isView: false,
+        objectId: String(req.query.id),
+        recipientId: token?.id,
+        hasViewed: false,
       },
       data: {
-        isView: true,
+        hasViewed: true,
       },
     });
 

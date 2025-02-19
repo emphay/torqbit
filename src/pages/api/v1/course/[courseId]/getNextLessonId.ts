@@ -7,6 +7,8 @@ import { withAuthentication } from "@/lib/api-middlewares/with-authentication";
 import { errorHandler } from "@/lib/api-middlewares/errorHandler";
 
 import { getCookieName } from "@/lib/utils";
+import { Role, StateType } from "@prisma/client";
+import { getCourseAccessRole } from "@/actions/getCourseAccessRole";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   let cookieName = getCookieName();
@@ -19,28 +21,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const userId = token?.id;
   const { courseId } = req.query;
   try {
-    const alreadyRegisterd = await prisma.courseRegistration.findUnique({
-      where: {
-        studentId_courseId: {
-          studentId: String(userId),
-          courseId: Number(courseId),
-        },
-      },
+    const hasAccess = await getCourseAccessRole(token?.role, token?.id, Number(courseId));
 
-      select: {
-        courseId: true,
-        courseState: true,
-      },
-    });
-
-    if (alreadyRegisterd) {
+    if (hasAccess.role == Role.STUDENT) {
       const latestLesson = await prisma.courseProgress.findFirst({
         orderBy: {
           createdAt: "desc",
         },
         where: {
-          courseId: alreadyRegisterd.courseId,
+          courseId: Number(courseId),
           studentId: token?.id,
+          resource: {
+            state: StateType.ACTIVE,
+          },
         },
         select: {
           resourceId: true,
@@ -54,12 +47,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const firstResource = await prisma.chapter.findFirst({
           where: {
             courseId: Number(courseId),
-            sequenceId: 1,
+            state: StateType.ACTIVE,
+          },
+          orderBy: {
+            sequenceId: "asc",
           },
           select: {
             resource: {
               where: {
-                sequenceId: 1,
+                state: StateType.ACTIVE,
+                createdAt: {
+                  lte: hasAccess.dateJoined,
+                },
+              },
+              orderBy: {
+                sequenceId: "asc",
               },
               select: {
                 resourceId: true,
@@ -78,8 +80,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         select: {
           authorId: true,
           chapters: {
+            where: {
+              state: StateType.ACTIVE,
+            },
+            orderBy: {
+              sequenceId: "asc",
+            },
             select: {
               resource: {
+                where: {
+                  state: StateType.ACTIVE,
+                },
+                orderBy: {
+                  sequenceId: "asc",
+                },
                 select: {
                   resourceId: true,
                 },
@@ -88,15 +102,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
         },
       });
-
-      if (courseDetail?.authorId === userId) {
+      if (courseDetail?.authorId === userId || token?.role === Role.ADMIN) {
         return res.status(200).json({ success: true, nextLessonId: courseDetail?.chapters[0].resource[0].resourceId });
       }
     }
-
-    return res.status(400).json({
-      success: false,
-    });
   } catch (err) {
     return errorHandler(err, res);
   }

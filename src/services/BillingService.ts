@@ -1,24 +1,69 @@
-import { ContentManagementService } from "./cms/ContentManagementService";
 import { generateDayAndYear } from "@/lib/utils";
 import { InvoiceData } from "@/types/payment";
 import prisma from "@/lib/prisma";
 import appConstant from "./appConstant";
-import MailerService from "./MailerService";
 import path from "path";
-import { createTempDir } from "@/actions/checkTempDirExist";
+import { ContentManagementService } from "./cms/ContentManagementService";
+import { FileObjectType } from "@/types/cms/common";
+import { APIResponse } from "@/types/apis";
+import https from "https";
+import http from "http";
+import os from "os";
+
+import EmailManagementService from "./cms/email/EmailManagementService";
+import { getSiteConfig } from "./getSiteConfig";
+import { getCurrency } from "@/actions/getCurrency";
+import { gatewayProvider } from "@prisma/client";
 
 const fs = require("fs");
 const PDFDocument = require("pdfkit");
 
+async function downloadImage(url: string, filename: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const dirPath = path.join(os.homedir(), ".torqbit");
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+
+      const filePath = path.join(dirPath, filename);
+      const file = fs.createWriteStream(filePath);
+
+      const protocol = url.startsWith("https") ? https : http;
+
+      protocol
+        .get(url, (response) => {
+          response.pipe(file);
+          file.on("finish", () => {
+            file.close();
+            console.log(`Image downloaded as ${filePath}`);
+            resolve(filePath);
+          });
+        })
+        .on("error", (err) => {
+          fs.unlink(filePath, () => {});
+          console.error(`Error downloading image: ${err.message}`);
+          reject(err);
+        });
+    } catch (error: any) {
+      console.error(`Unexpected error: ${error.message}`);
+      reject(error);
+    }
+  });
+}
+
 export class BillingService {
-  cms: ContentManagementService;
-  constructor(cms: ContentManagementService) {
-    this.cms = cms;
-  }
   // currency formatter
 
   async createPdf(invoice: InvoiceData, savePath: string): Promise<string> {
     let doc = new PDFDocument({ margin: 50 });
+    const homeDir = os.homedir();
+    let dirPath = path.join(homeDir, `${appConstant.homeDirName}/${appConstant.staticFileDirName}`);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, {
+        recursive: true,
+      });
+    }
 
     // currency formatter
 
@@ -30,11 +75,19 @@ export class BillingService {
     function generateHr(y: number) {
       doc.strokeColor("#aaaaaa").lineWidth(1).moveTo(50, y).lineTo(550, y).stroke();
     }
-    const logoPath = path.join(process.cwd(), appConstant.platformLogo);
+    const { site } = getSiteConfig();
+
     // header
-    function generateHeader(invoiceData: InvoiceData) {
+    async function generateHeader(invoiceData: InvoiceData) {
+      let imagePath = site.brand.icon;
+      const localImgPath = await downloadImage(imagePath, "brand-icon.png");
+      // const sourcePath = path.join(
+      //   homeDir,
+      //   `${appConstant.homeDirName}/${appConstant.staticFileDirName}/${imagePath.split("/").pop()}`
+      // );
+
       doc
-        .image(logoPath, 50, 45, { width: 50 })
+        .image(localImgPath, 50, 45, { width: 50 })
         .fillColor("#666")
         .fontSize(20)
         .text(invoiceData.businessInfo.platformName, 110, 62)
@@ -137,124 +190,114 @@ export class BillingService {
       };
     }
 
-    if (createTempDir(process.env.MEDIA_UPLOAD_PATH, appConstant.invoiceTempDir)) {
-      const amountDetail = calculateGst(Number(invoice.totalAmount), invoice.businessInfo.taxRate);
-      generateHeader(invoice);
-      generateBillTo(invoice);
-      generateCustomerInformation(invoice);
-      generateInvoiceTable(invoice);
-      if (invoice.businessInfo.taxIncluded) {
-        generatePriceSummary(
-          350,
-          "left",
-          "#666",
-          `Subtotal in ${invoice.currency}`,
-          `Integrated GST (${invoice.businessInfo.taxRate}%)`,
-          `Total in ${invoice.currency}`
-        );
+    const amountDetail = calculateGst(Number(invoice.totalAmount), invoice.businessInfo.taxRate);
+    await generateHeader(invoice);
+    generateBillTo(invoice);
+    generateCustomerInformation(invoice);
+    generateInvoiceTable(invoice);
+    if (invoice.businessInfo.taxIncluded) {
+      generatePriceSummary(
+        350,
+        "left",
+        "#666",
+        `Subtotal in ${invoice.currency}`,
+        `Integrated GST (${invoice.businessInfo.taxRate}%)`,
+        `Total in ${invoice.currency}`
+      );
 
-        generatePriceSummary(
-          500,
-          "left",
-          "#000",
-          `${amountDetail.subtotal}`,
-          `${amountDetail.gstAmount}`,
-          `${invoice.totalAmount.toFixed(2)}`
-        );
-      }
-      return new Promise<string>((resolve, reject) => {
-        const outputStream = doc.pipe(fs.createWriteStream(savePath));
-
-        outputStream.on("error", (error: any) => {
-          reject(`Error writing file: ${error.message}`);
-        });
-
-        outputStream.on("finish", () => {
-          resolve(savePath);
-        });
-
-        doc.end(); // End the document after piping to the output stream
-      });
-    } else {
-      return new Promise<string>((resolve, reject) => {
-        reject("Directory not found");
-      });
+      generatePriceSummary(
+        500,
+        "left",
+        "#000",
+        `${amountDetail.subtotal}`,
+        `${amountDetail.gstAmount}`,
+        `${invoice.totalAmount.toFixed(2)}`
+      );
     }
+    return new Promise<string>((resolve, reject) => {
+      const outputStream = doc.pipe(fs.createWriteStream(savePath));
+
+      outputStream.on("error", (error: any) => {
+        reject(`Error writing file: ${error.message}`);
+      });
+
+      outputStream.on("finish", () => {
+        resolve(savePath);
+      });
+
+      doc.end(); // End the document after piping to the output stream
+    });
   }
 
   async mailInvoice(pdfPath: string, invoice: InvoiceData) {
     const configData = {
       name: invoice.stundentInfo.name,
       email: invoice.stundentInfo.email,
-      url: `${process.env.NEXTAUTH_URL}/courses/${invoice.courseDetail.courseId}`,
+      url: `${process.env.NEXTAUTH_URL}/courses/${invoice.courseDetail.slug}`,
       pdfPath: pdfPath,
       course: {
         name: invoice.courseDetail.courseName,
         thumbnail: invoice.courseDetail.thumbnail,
       },
     };
+    const ms = await EmailManagementService.getMailerService();
 
-    MailerService.sendMail("COURSE_ENROLMENT", configData).then(async (result) => {
-      console.log(result.error);
-      fs.unlinkSync(pdfPath);
-    });
+    ms &&
+      ms.sendMail("COURSE_ENROLMENT", configData).then(async (result) => {
+        console.log(result.error);
+        fs.unlinkSync(pdfPath);
+      });
   }
 
-  async uploadInvoice(pdfPath: string, invoice: InvoiceData): Promise<string> {
+  async uploadInvoice(pdfPath: string, invoice: InvoiceData): Promise<APIResponse<string>> {
     return new Promise(async (resolve, reject) => {
-      const serviceProviderResponse = await prisma?.serviceProvider.findFirst({
-        where: {
-          service_type: "media",
-        },
-      });
-
-      if (serviceProviderResponse && pdfPath) {
-        const serviceProvider = this.cms.getServiceProvider(
-          serviceProviderResponse?.provider_name,
-          serviceProviderResponse?.providerDetail
-        );
+      if (pdfPath) {
         const pdfBuffer = fs.readFileSync(pdfPath);
-        await this.cms
-          .uploadFile(`${invoice.invoiceNumber}_invocie`, pdfBuffer, pdfPath, serviceProvider)
-          .then(async (result) => {
-            await prisma.invoice
-              .update({
-                where: {
-                  id: invoice.invoiceNumber,
-                },
-                data: {
-                  pdfPath: result.fileCDNPath,
-                },
-              })
-              .then(async (result) => {
-                resolve(pdfPath);
-              });
+        const cms = new ContentManagementService().getCMS(appConstant.defaultCMSProvider);
+        const cmsConfig = (await cms.getCMSConfig()).body?.config;
+
+        const response = await cms.uploadPrivateFile(
+          cmsConfig,
+          pdfBuffer,
+          FileObjectType.INVOICE,
+          `${invoice.invoiceNumber}_invocie.pdf`,
+          "pdf"
+        );
+
+        if (response.success) {
+          await prisma.invoice.update({
+            where: {
+              id: invoice.invoiceNumber,
+            },
+            data: {
+              pdfPath: response.body,
+            },
           });
+        }
+
+        resolve(response);
       }
     });
   }
 
   async sendInvoice(invoice: InvoiceData, savePath: string) {
-    this.createPdf(invoice, savePath)
+    let invoiceData = { ...invoice, currency: await getCurrency(gatewayProvider.CASHFREE) };
+    this.createPdf(invoiceData, savePath)
       .then(async (result) => {
-        console.log("invoice generated");
-
-        this.uploadInvoice(result, invoice)
+        this.uploadInvoice(result, invoiceData)
           .then((result) => {
-            console.log("invoice uploaded");
-
-            this.mailInvoice(savePath, invoice)
+            this.mailInvoice(savePath, invoiceData)
               .then((r) => console.log("invoice sent through mail"))
               .catch((error) => {
-                console.log(error, "error while sending  invoice mail");
+                console.error(`Failed to send the invoice. ${error.message}`);
               });
           })
           .catch((error) => {
-            console.log(error, "error while uploading invoice");
+            console.error(`Failed to upload the invoice: ${error.message}`);
           });
       })
       .catch((error) => {
-        console.log(error, "error while creating pdf");
+        console.error(`Failed to create the pdf: ${error.message}`);
       });
   }
 }

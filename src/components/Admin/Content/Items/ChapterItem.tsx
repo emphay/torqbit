@@ -4,7 +4,7 @@ import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IResourceDetail } from "@/lib/types/learn";
-import { Dropdown, Flex, MenuProps, Modal, Popconfirm } from "antd";
+import { Dropdown, Flex, MenuProps, message, Modal, Popconfirm, Tag } from "antd";
 import styles from "@/styles/Curriculum.module.scss";
 import SvgIcons from "@/components/SvgIcons";
 import { ResourceContentType, StateType } from "@prisma/client";
@@ -15,8 +15,8 @@ const SortableItem: FC<{
   icon: ReactNode;
   lesson: IResourceDetail;
   id: number;
-  deleteRes: (id: number) => void;
-  updateResState: (id: number, state: string, notifyStudent: boolean) => void;
+  deleteRes: (id: number, isCanceled: boolean) => void;
+  updateResState: (id: number, state: string) => void;
   onEditResource: (id: number, contetn: ResourceContentType) => void;
   chapterId: number;
   state: string;
@@ -24,30 +24,64 @@ const SortableItem: FC<{
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [modal, contextHolder] = Modal.useModal();
+  const [messageApi, contextMessageHolder] = message.useMessage();
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
   const dropdownMenu: MenuProps["items"] = [
-    {
-      key: "1",
-      label: "Edit",
-      onClick: () => {
-        onEditResource(lesson.resourceId, lesson.contentType as ResourceContentType);
-        setTimeout(() => {}, 500);
-      },
-    },
+    ...(lesson.assignment && state === "Published"
+      ? []
+      : [
+          {
+            key: "1",
+            label: "Edit",
+            onClick: () => {
+              onEditResource(lesson.resourceId, lesson.contentType as ResourceContentType);
+              setTimeout(() => {}, 500);
+            },
+          },
+
+          {
+            key: "2",
+            label:
+              lesson.assignment && state === "Draft" ? (
+                <Popconfirm
+                  title={`Publish the assignment`}
+                  description={`Once the assignment is published, it can no longer be edited.`}
+                  onConfirm={() => {
+                    updateResState(lesson.resourceId, StateType.ACTIVE);
+                  }}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  Publish
+                </Popconfirm>
+              ) : state === "Published" ? (
+                "Move to Draft"
+              ) : (
+                "Publish"
+              ),
+            onClick: () => {
+              if (lesson.assignment && state === "Draft") {
+                return;
+              } else {
+                updateResState(lesson.resourceId, state === "Published" ? StateType.DRAFT : StateType.ACTIVE);
+              }
+            },
+          },
+        ]),
 
     {
-      key: "2",
+      key: "3",
 
       label: (
         <Popconfirm
           title={`Delete the Lesson`}
           description={`Are you sure to delete this Lesson?`}
           onConfirm={() => {
-            deleteRes(lesson.resourceId);
+            deleteRes(lesson.resourceId, false);
           }}
           okText="Yes"
           cancelText="No"
@@ -62,6 +96,7 @@ const SortableItem: FC<{
     <div ref={setNodeRef} style={style} {...attributes}>
       <Flex justify="space-between" align="center">
         {contextHolder}
+        {contextMessageHolder}
         <Flex align="center" gap={5}>
           <i
             {...listeners}
@@ -73,60 +108,20 @@ const SortableItem: FC<{
           </i>
 
           <Flex gap={10} align="center">
-            {icon}
+            <i style={{ lineHeight: 0, color: "var(--font-secondary)", fontSize: 18 }}>{icon}</i>
             <div style={{ cursor: "pointer" }}> {title}</div>
           </Flex>
         </Flex>
         <div>
           <Flex align="center" gap={10}>
-            <Dropdown.Button
-              className={state === "Draft" ? styles.draft_btn : styles.publish_btn}
-              icon={SvgIcons.chevronDown}
-              menu={{
-                items: [
-                  {
-                    key: 1,
-                    label: state === "Published" ? "Draft" : "Published",
-                    onClick: () => {
-                      state === "Published" || lesson.contentType === ResourceContentType.Assignment
-                        ? updateResState(
-                            lesson.resourceId,
-                            state === "Published" ? StateType.DRAFT : StateType.ACTIVE,
-                            false
-                          )
-                        : modal[lesson.isStudentNotified ? "success" : "confirm"]({
-                            title: "Email Notification",
-                            content: lesson.isStudentNotified ? "Already notified" : "Do you want to Notify student",
-                            okText: lesson.isStudentNotified ? "OK" : "Yes",
-                            cancelText: "No",
-
-                            onOk: () => {
-                              updateResState(
-                                lesson.resourceId,
-                                state === "Published" ? StateType.DRAFT : StateType.ACTIVE,
-                                lesson.contentType === ResourceContentType.Video && !lesson.isStudentNotified
-                                  ? true
-                                  : false
-                              );
-                            },
-
-                            onCancel: () => {
-                              updateResState(
-                                lesson.resourceId,
-                                state === "Published" ? StateType.DRAFT : StateType.ACTIVE,
-                                lesson.isStudentNotified
-                              );
-                            },
-                          });
-                    },
-                  },
-                ],
-              }}
-            >
-              {state}
-            </Dropdown.Button>
+            {state !== "Published" && <Tag color={"warning"}>Draft</Tag>}
             <div>
-              <Dropdown menu={{ items: dropdownMenu }} placement="bottomRight" arrow={{ pointAtCenter: true }}>
+              <Dropdown
+                menu={{ items: dropdownMenu }}
+                trigger={["click"]}
+                placement="bottomRight"
+                arrow={{ pointAtCenter: true }}
+              >
                 <div style={{ rotate: "90deg" }}>{SvgIcons.threeDots}</div>
               </Dropdown>
             </div>
@@ -140,8 +135,8 @@ const SortableItem: FC<{
 const ChapterItem: FC<{
   lessons: IResourceDetail[];
 
-  deleteRes: (id: number) => void;
-  updateResState: (id: number, state: string, notifyStudent: boolean) => void;
+  deleteRes: (id: number, isCanceled: boolean) => void;
+  updateResState: (id: number, state: string) => void;
   onEditResource: (id: number, contetn: ResourceContentType) => void;
   chapterId: number;
 }> = ({ lessons, deleteRes, updateResState, onEditResource, chapterId }) => {

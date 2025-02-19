@@ -1,7 +1,5 @@
-import SvgIcons from "@/components/SvgIcons";
-
 import appConstant from "@/services/appConstant";
-import { Dispatch } from "react";
+
 const md5 = require("md5");
 
 export const authConstants = {
@@ -15,6 +13,9 @@ export const authConstants = {
 };
 export function capitalizeFirstLetter(val: string) {
   return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+export function convertArrayToString(arr: string[]): string {
+  return arr.sort().join(", ");
 }
 export const getCookieName = () => {
   let cookieName = appConstant.development.cookieName;
@@ -145,7 +146,8 @@ export const mapToArray = (map: Map<string, string>): [string, string][] => {
 };
 
 export const compareByHash = (existingValue: [string, string][], currentValue: [string, string][]): boolean => {
-  const cleanedMap = (map: [string, string][]) => new Map(Array.from(map, ([key, value]) => [key, value.replace(/\n/g, " ").trim()]));
+  const cleanedMap = (map: [string, string][]) =>
+    new Map(Array.from(map, ([key, value]) => [key, value.replace(/\n/g, " ").trim()]));
 
   const map1Json = mapToArray(cleanedMap(existingValue)).flat().join("").replace(/\s+/g, "").trim();
   const map2Json = mapToArray(cleanedMap(currentValue)).flat().join("").replace(/\s+/g, "").trim();
@@ -340,3 +342,127 @@ export const deepMerge = (defaultObj: any, userObj: any): any => {
 
   return userObj;
 };
+
+export function getFileExtension(fileName: string) {
+  const parts = fileName.split(".");
+
+  const extension = parts[parts.length - 1];
+
+  return extension.toLowerCase();
+}
+
+export const getDateAndYear = (dateInfo?: Date) => {
+  const currentDate = dateInfo ? dateInfo : new Date();
+  const year = currentDate.getFullYear();
+  const monthNumber = currentDate.getMonth();
+  const day = currentDate.getDate();
+  const date = new Date(year, monthNumber, day); // 2009-11-10
+  const monthName = date.toLocaleString("default", { month: "long" });
+  return `${monthName} ${day}, ${year}`;
+};
+
+export const checkIfImageIsSquare = (file: File) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectURL = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const { width, height } = img;
+      URL.revokeObjectURL(objectURL); // Cleanup the object URL
+      resolve(width === height);
+    };
+
+    img.onerror = (error) => {
+      URL.revokeObjectURL(objectURL); // Cleanup the object URL
+      reject(error);
+    };
+
+    img.src = objectURL; // Trigger the load
+  });
+};
+
+export const regex = /^([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[a-zA-Z0-9\-._~:\/?#[\]@!$&'()*+,;=]*)?$/;
+export const mailtoRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+export const telRegex = /^\+?[0-9-]+$/;
+
+export function extractLinkKey(link: string) {
+  if (link.startsWith("tel:")) {
+    return `tel:`;
+  } else if (link.startsWith(`https://`)) {
+    return "https://";
+  } else if (link.startsWith(`mailto:`)) {
+    return "mailto:";
+  } else {
+    return `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/`;
+  }
+}
+export function extractValue(link: string) {
+  if (link.startsWith("mailto:")) {
+    return link.slice("mailto:".length);
+  } else if (link.startsWith("tel:")) {
+    return link.slice("tel:".length);
+  } else if (link.startsWith("https://") || link.startsWith(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}`)) {
+    return link.slice(link.indexOf("://") + 3);
+  } else if (link.startsWith("/")) {
+    return link.slice(1);
+  }
+}
+
+export function areAnswersEqualForKey(arr1: (string | number)[], arr2: (string | number)[]): boolean {
+  if (!arr1 || arr1.length === 0) {
+    return false;
+  }
+  // Compare the length of the arrays
+  if (arr1?.length !== arr2?.length) {
+    return false;
+  }
+
+  // Compare each element index-wise
+  for (let i = 0; i < arr1?.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false; // Mismatch at any index
+    }
+  }
+
+  return true; // Arrays match index-wise
+}
+
+export const compareByPercentage = (current: number, previous: number) => {
+  if (previous === 0) {
+    return current === 0 ? 0 : 100;
+  }
+  return Math.floor(((current - previous) / previous) * 100);
+};
+
+export const validateImage = async (url: string) => {
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      cache: "no-cache",
+    });
+
+    if (response.ok && response.headers.get("content-type")?.includes("image")) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+};
+
+export function getFormattedDate(date: Date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-based, so add 1
+  const day = date.getDate().toString().padStart(2, "0"); // Ensure day is always two digits
+
+  return `${year}-${month}-${day}`;
+}
+
+export function setLocalStorage(name: string, data: any) {
+  localStorage.setItem(name, JSON.stringify(data));
+}
+
+export function getLocalStorage(name: string) {
+  JSON.parse(localStorage.getItem(name) as any);
+}

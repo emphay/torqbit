@@ -1,0 +1,246 @@
+.navBarContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: -1px;
+  z-index: 10;
+  background-color: var(--bg-primary);
+  height: 60px;
+  width: 100%;
+  box-shadow: var(--box-shadow);
+  backdrop-filter: blur(10px);
+  background: var(--bg-header);
+  padding: 5px 35px;
+  a {
+    color: var(--font-secondary);
+  }
+
+  nav {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+
+    img {
+      width: auto;
+      height: 30px;
+      max-width: 300px;
+    }
+    .link_wrapper {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+    .contact_button {
+      width: 100%;
+      padding: 0px 15px;
+    }
+    .button_icon {
+      line-height: 0;
+    }
+
+    h1 {
+      margin: 0;
+      padding: 0;
+      color: var(--font-primary);
+      font-size: 20px;
+    }
+
+    ul {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin: 0;
+
+      li {
+        font-size: 16px;
+        color: var(--font-secondary);
+
+        &:hover {
+          color: var(--font-primary);
+        }
+
+        list-style: none;
+        cursor: pointer;
+      }
+    }
+
+    .switchBtn {
+      height: 30px;
+      width: 30px;
+      background-color: var(--bg-primary);
+      border: none;
+      color: var(--font-primary);
+    }
+  }
+}
+
+.platformNameLogo {
+  display: none;
+}
+
+.hamburger {
+  display: none;
+}
+
+.responsiveNavContainer {
+  display: none;
+}
+@media only screen and (max-width: 435px) {
+  // NavBar
+  .sideNaveContainer,
+  .platformNameLogo {
+    display: unset;
+    position: fixed;
+    top: 0;
+  }
+
+  .switchBtn {
+    height: 30px;
+    width: 30px;
+    background-color: var(--bg-secondary);
+    border: none;
+    color: var(--font-primary);
+  }
+
+  .menuDrawer > .drawerMenuItems {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 25px;
+    padding: 20px 0px;
+    color: var(--font-secondary);
+
+    .menuTitle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      i {
+        margin-top: 5px;
+      }
+    }
+  }
+
+  .drawerHeader {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 20px;
+
+    img {
+      height: 30px;
+      width: auto;
+      max-width: 250px;
+    }
+
+    .drawerTitle,
+    .childrenDrawerTitle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .childrenDrawerTitle {
+      margin: 0;
+      height: 40px;
+      font-size: 20px;
+    }
+  }
+  .navBarContainer {
+    display: none;
+  }
+  .sideNaveContainer,
+  .platformNameLogo {
+    display: unset;
+  }
+
+  .responsive__header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100vw;
+    background-color: var(--bg-primary);
+    box-shadow: var(--box-shadow);
+    backdrop-filter: blur(10px);
+    background: var(--bg-header);
+    height: 60px;
+  }
+
+  .hamburger {
+    display: unset;
+    color: var(--font-primary);
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 2;
+  }
+
+  .platformNameLogo {
+    display: unset;
+    position: absolute;
+    top: 13px;
+    left: 10px;
+    z-index: 2;
+    color: var(--font-primary);
+  }
+
+  .responsiveNavContainer {
+    background-color: var(--bg-primary);
+    width: 100%;
+    height: 60px;
+    padding: 0px 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .navTitle {
+      color: var(--font-secondary);
+
+      font-size: 12px;
+    }
+
+    .selectedNavBar {
+      color: var(--font-primary);
+      width: 60px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      position: relative;
+      a:hover {
+        color: var(--btn-primary);
+      }
+
+      span {
+        height: 3px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        background-color: var(--btn-primary);
+      }
+    }
+    .navBar {
+      width: 60px;
+
+      color: var(--font-secondary);
+      padding: 10px;
+      span {
+        display: none;
+      }
+    }
+  }
+}

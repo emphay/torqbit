@@ -18,22 +18,22 @@ import {
 } from "@react-email/components";
 import { Flex } from "antd";
 import * as React from "react";
-import { useAppContext } from "../ContextApi/AppContext";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
 
 interface IProps {
   configData: IEnrolmentEmailConfig;
 }
 
 export const CourseEnrolmentEmail = ({ configData }: IProps) => {
-  const { globalState } = useAppContext();
-  const siteConfig = globalState.siteConfig;
+  const { site }: { site: PageSiteConfig } = getSiteConfig();
 
   return (
     <Tailwind>
       <Html>
         <Head />
 
-        <Preview>{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`}</Preview>
+        <Preview>{`${site.brand?.name}`}</Preview>
 
         <Head>
           <style></style>
@@ -45,7 +45,7 @@ export const CourseEnrolmentEmail = ({ configData }: IProps) => {
                 height={50}
                 width={50}
                 style={{ display: "unset" }}
-                src={`https://cdn.torqbit.com/static/torq.png`}
+                src={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/${site.brand?.icon}`}
               />
             </Heading>
             <Hr className="border border-solid border-[#eaeaea]  mx-0 w-full" />
@@ -60,7 +60,7 @@ export const CourseEnrolmentEmail = ({ configData }: IProps) => {
               </Text>
               <Section className=" item-center   gap-5">
                 <div className="text-center bg-[#fff] min-h-[150px] p-2 mt-[32px] mb-[32px]">
-                  <Img src={configData.course.thumbnail} height={150} width={150} alt="course" />
+                  <Img src={configData.course.thumbnail} height={150} width={"auto"} alt="course" />
                   <Flex vertical justify="space-between" className=" mt-2 ">
                     <div>
                       <Heading className="text-[#000] text-left text-[15px] mb-1 ">{configData.course.name}</Heading>
@@ -71,7 +71,7 @@ export const CourseEnrolmentEmail = ({ configData }: IProps) => {
                     <div className="flex item-center justify-start">
                       <Button
                         href={`${configData.url}`}
-                        className={`bg-[${siteConfig.brand?.brandColor}] px-5 py-2 text-white text-left text-[12px]  rounded`}
+                        className={`bg-[${site.brand?.brandColor}] px-5 py-2 text-white text-left text-[12px]  rounded`}
                       >
                         Start Course
                       </Button>
@@ -87,7 +87,7 @@ export const CourseEnrolmentEmail = ({ configData }: IProps) => {
               <Text className="text-[#000] text-[15px] m-0 ">
                 Thanks & Regards <br />
               </Text>
-              <Text className="text-black text-[15px] my-2">{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`} team</Text>
+              <Text className="text-black text-[15px] my-2">{`${site.brand?.name}`} team</Text>
 
               <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
               <Text className="text-[#888] text-[14px] leading-[20px]">

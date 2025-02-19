@@ -11,7 +11,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     let cookieName = getCookieName();
 
-    const { tagCommentId } = req.query;
     const token = await getToken({
       req,
       secret: process.env.NEXT_PUBLIC_SECRET,
@@ -21,12 +20,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const userId = token?.id;
     await prisma.notification.updateMany({
       where: {
-        toUserId: userId,
-        tagCommentId: Number(tagCommentId),
-        isView: false,
+        recipientId: userId,
+        hasViewed: false,
       },
       data: {
-        isView: true,
+        hasViewed: true,
       },
     });
 

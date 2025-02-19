@@ -6,8 +6,10 @@ import { errorHandler } from "@/lib/api-middlewares/errorHandler";
 import { getToken } from "next-auth/jwt";
 import { getCookieName } from "@/lib/utils";
 import getRoleByLessonId from "@/actions/getRoleByLessonId";
-import { Role } from "@prisma/client";
-
+import { EntityType, NotificationType, ResourceContentType, Role } from "@prisma/client";
+import { getCourseAccessRole } from "@/actions/getCourseAccessRole";
+import NotificationHandler from "@/actions/notification";
+import { ISendNotificationProps } from "@/types/notification";
 /**
  * Post reply on a query
  * @param req
@@ -32,37 +34,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       cookieName,
     });
     const body = await req.body;
-    const { lessonId, courseId, comment, parentCommentId } = body;
+    const { lessonId, slug, comment, parentCommentId } = body;
 
-    const isEnrolled = await prisma.courseRegistration.findUnique({
-      where: {
-        studentId_courseId: {
-          studentId: String(token?.id),
-          courseId: Number(courseId),
-        },
-      },
-      select: {
-        course: {
-          select: {
-            authorId: true,
-          },
-        },
-      },
-    });
+    const userRole = await getCourseAccessRole(token?.role, token?.id, slug, true);
 
-    const userRole = await getRoleByLessonId(lessonId, token?.role, token?.id);
-
-    if (isEnrolled || userRole === Role.AUTHOR) {
-      const queryAuthor = await prisma.discussion.findUnique({
-        where: {
-          id: parentCommentId,
-        },
-        select: {
-          userId: true,
-          resourceId: true,
-        },
-      });
-
+    if (userRole.role !== Role.NOT_ENROLLED) {
       const addDiscussion = await prisma.discussion.create({
         data: {
           userId: String(token?.id),
@@ -76,45 +52,51 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               id: true,
               name: true,
               image: true,
+              email: true,
+            },
+          },
+          resource: {
+            select: {
+              contentType: true,
+              chapter: {
+                select: {
+                  course: {
+                    select: {
+                      authorId: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
       });
-      const repliesAuthors = await prisma.discussion.findMany({
-        distinct: ["userId"],
+
+      const queryAuthor = await prisma.discussion.findUnique({
         where: {
-          parentCommentId: parentCommentId,
-          userId: {
-            notIn: [String(token?.id), String(queryAuthor?.userId)],
-          },
+          id: parentCommentId,
         },
         select: {
           userId: true,
-          resourceId: true,
         },
       });
+      const courseAuthorId = addDiscussion.resource.chapter.course.authorId;
 
-      let courseAuthor = {
-        userId: String(isEnrolled?.course.authorId),
-        resourceId: lessonId,
-      };
+      if (queryAuthor && queryAuthor.userId !== courseAuthorId && String(token?.id) == courseAuthorId) {
+        let notificationData: ISendNotificationProps = {
+          notificationType: NotificationType.REPLY_QUERY,
+          recipientId: queryAuthor?.userId,
+          subjectId: String(token?.id),
+          subjectType: EntityType.USER,
+          objectId: String(addDiscussion.id),
+          objectType:
+            addDiscussion.resource.contentType === ResourceContentType.Video
+              ? EntityType.VIDEO_LESSON
+              : EntityType.ASSIGNMENT_LESSON,
+        };
 
-      queryAuthor &&
-        repliesAuthors
-          .concat(queryAuthor.userId === isEnrolled?.course.authorId ? [queryAuthor] : [queryAuthor, courseAuthor])
-          .filter((u) => u.userId !== token?.id)
-          .map(async (user) => {
-            return prisma.notification.create({
-              data: {
-                notificationType: "COMMENT",
-                toUserId: user.userId,
-                commentId: addDiscussion.id,
-                fromUserId: String(token?.id) || "",
-                tagCommentId: parentCommentId,
-                resourceId: user.resourceId,
-              },
-            });
-          });
+        NotificationHandler.createNotification(notificationData);
+      }
 
       return res.status(200).json({ success: true, comment: addDiscussion, message: "Reply has been posted" });
     } else {

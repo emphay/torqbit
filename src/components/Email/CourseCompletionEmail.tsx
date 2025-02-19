@@ -1,4 +1,6 @@
 import { ICompletionEmailConfig } from "@/lib/emailConfig";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
 
 import {
   Body,
@@ -22,11 +24,12 @@ interface IProps {
 }
 
 export const CourseCompletionEmail = ({ configData }: IProps) => {
+  const { site }: { site: PageSiteConfig } = getSiteConfig();
   return (
     <Tailwind>
       <Html>
         <Head />
-        <Preview>{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`}</Preview>
+        <Preview>{`${site.brand?.name}`}</Preview>
         <Head>
           <style></style>
         </Head>
@@ -37,7 +40,7 @@ export const CourseCompletionEmail = ({ configData }: IProps) => {
                 height={50}
                 width={50}
                 style={{ display: "unset" }}
-                src={`https://cdn.torqbit.com/static/torq.png`}
+                src={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/${site.brand?.icon}`}
               />
             </Heading>
             <Hr className="border border-solid border-[#eaeaea]  mx-0 w-full" />
@@ -67,7 +70,7 @@ export const CourseCompletionEmail = ({ configData }: IProps) => {
               <Text className="text-[#000] text-[15px] m-0 ">
                 Thanks & Regards <br />
               </Text>
-              <Text className="text-black text-[15px] my-2">{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`} team</Text>
+              <Text className="text-black text-[15px] my-2">{`${site.brand?.name}`} team</Text>
 
               <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
               <Text className="text-[#888] text-[14px] leading-[20px]">

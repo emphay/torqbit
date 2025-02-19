@@ -8,12 +8,13 @@ import ReplyDrawer from "./ReplyDrawer";
 import { useRouter } from "next/router";
 import DiscussionsService from "@/services/DiscussionsService";
 import appConstant from "@/services/appConstant";
-import SpinLoader from "@/components/SpinLoader/SpinLoader";
+
+import { LoadingOutlined } from "@ant-design/icons";
 
 export interface IComment extends Discussion {
   comment: string;
   user: {
-    id: string;
+    email: string;
     name: string;
     image: string;
   };
@@ -143,8 +144,8 @@ const QADiscssionTab: FC<{ resourceId?: number; loading: boolean }> = ({
       setLoading(true);
       DiscussionsService.postQuery(
         Number(resourceId),
-        Number(router.query.courseId),
-        comment,
+        String(router.query.slug),
+        comment.replace(/(<p><br><\/p>)+$/, ""),
         (result) => {
           message.success(result.message);
           let data = result.comment;
@@ -172,42 +173,36 @@ const QADiscssionTab: FC<{ resourceId?: number; loading: boolean }> = ({
   return (
     <section className={styles.qa_discussion_tab}>
       <QAForm loadingPage={loading} editorBorderRadius={8} placeholder="Ask a Question" onPost={onQueryPost} />
-      <>
-        {listLoading ? (
-          <Flex align="center" justify="center">
-            <SpinLoader className="editor_spinner" />
-          </Flex>
-        ) : (
-          <>
-            {comments.map((comment, i) => {
-              return (
-                <CommentBox
-                  resourceId={Number(resourceId)}
-                  showReplyDrawer={showReplyDrawer}
-                  comment={comment}
-                  key={i}
-                  listLoading={listLoading}
-                  replyList={false}
-                  comments={comments}
-                  setAllComment={setComments}
-                  onUpdateReplyCount={onUpdateReplyCount}
-                  setCommentCount={setCommentCount}
-                  commentCount={commentCount}
-                />
-              );
-            })}
-          </>
-        )}
-      </>
+
+      <Spin spinning={listLoading} indicator={<LoadingOutlined spin />} size="small">
+        {comments.map((comment, i) => {
+          return (
+            <CommentBox
+              resourceId={Number(resourceId)}
+              showReplyDrawer={showReplyDrawer}
+              comment={comment}
+              key={i}
+              listLoading={listLoading}
+              replyList={false}
+              comments={comments}
+              setAllComment={setComments}
+              onUpdateReplyCount={onUpdateReplyCount}
+              setCommentCount={setCommentCount}
+              commentCount={commentCount}
+            />
+          );
+        })}
+      </Spin>
 
       {router.query.queryId && (
         <Flex align="center" justify="flex-end">
           <Button
             type="primary"
+            loading={listLoading}
             onClick={() => {
               setPageSize(3);
               getDiscussions(pageSize);
-              router.push(`/courses/${router.query.courseId}/lesson/${router.query.lessonId}`);
+              router.push(`/courses/${router.query.slug}/lesson/${router.query.lessonId}`);
             }}
           >
             Load all
@@ -222,7 +217,7 @@ const QADiscssionTab: FC<{ resourceId?: number; loading: boolean }> = ({
         comments={comments}
         onUpdateReplyCount={onUpdateReplyCount}
       />
-      {commentCount !== comments.length && comments.length > 0 && commentCount > 5 && (
+      {commentCount !== comments.length && comments.length > 0 && commentCount > 5 && !listLoading && (
         <Divider>
           <Button type="text" loading={listLoading} className={styles.load_more_comment} onClick={onClickMore}>
             Load More

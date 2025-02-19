@@ -1,7 +1,368 @@
+import React, { FC } from "react";
+
+export const EmptyCourses: React.FC<{ bgColor: string; brandColor: string; fontColor: string; size: string }> = ({
+  bgColor,
+  brandColor,
+  fontColor,
+  size,
+}) => (
+  <i style={{ fontSize: size, lineHeight: 1 }}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height=".93em" fill="none" viewBox="0 0 300 279">
+      <path
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M261.324 67.817V78.78M255.855 73.286h10.939M37.065 25.514v10.938M31.571 30.983h10.964"
+      ></path>
+      <path fill={bgColor} d="M122.179 4.986a2.493 2.493 0 1 0 0-4.986 2.493 2.493 0 0 0 0 4.986"></path>
+      <path
+        fill={bgColor}
+        d="M202.106 104.091c-21.291 0-42.964-.865-63.238-6.512-19.893-5.52-38.157-16.23-54.437-28.617-10.659-8.064-20.35-14.474-34.188-13.508a63.2 63.2 0 0 0-36.936 14.5C-4.296 85.216-1.65 113.783 5.396 133.853c10.582 30.22 42.786 51.156 70.157 64.841 31.619 15.797 66.367 24.955 101.192 30.246 30.525 4.629 69.75 8.013 96.205-11.931 24.293-18.315 30.958-60.134 25.005-88.37a34.77 34.77 0 0 0-12.49-21.19c-17.068-12.465-42.531-4.146-61.712-3.714-7.122.153-14.372.331-21.647.356M150.009 278.416c51.574 0 93.382-2.608 93.382-5.825s-41.808-5.825-93.382-5.825c-51.573 0-93.382 2.608-93.382 5.825s41.809 5.825 93.382 5.825"
+      ></path>
+      <path
+        fill={brandColor}
+        d="M189.673 8.448 65.345 25.258a7.275 7.275 0 0 0-6.235 8.184l24.11 178.324a7.275 7.275 0 0 0 8.185 6.235l124.327-16.81a7.274 7.274 0 0 0 6.235-8.184l-24.11-178.324a7.275 7.275 0 0 0-8.184-6.235"
+      ></path>
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M230.977 34.621H105.518a7.275 7.275 0 0 0-7.275 7.275v179.947a7.275 7.275 0 0 0 7.275 7.275h125.459a7.276 7.276 0 0 0 7.276-7.275V41.896a7.276 7.276 0 0 0-7.276-7.275"
+      ></path>
+      <path
+        fill={brandColor}
+        d="M198.391 174.325h-60.313a4.096 4.096 0 0 0-4.095 4.095v.026a4.095 4.095 0 0 0 4.095 4.095h60.313a4.095 4.095 0 0 0 4.096-4.095v-.026a4.096 4.096 0 0 0-4.096-4.095M196.229 207.903h-57.871c-.688 0-1.246.558-1.246 1.246v.382c0 .688.558 1.246 1.246 1.246h57.871c.689 0 1.247-.558 1.247-1.246v-.382c0-.688-.558-1.246-1.247-1.246M210.984 194.446h-85.242a1.654 1.654 0 1 0 0 3.307h85.242a1.653 1.653 0 0 0 0-3.307"
+      ></path>
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M226.576 40.548H109.919a5.24 5.24 0 0 0-5.24 5.24v101.166a5.24 5.24 0 0 0 5.24 5.24h116.657a5.24 5.24 0 0 0 5.241-5.24V45.788a5.24 5.24 0 0 0-5.241-5.24"
+      ></path>
+      <path
+        fill={brandColor}
+        stroke={bgColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M183.815 120.829a4.1 4.1 0 0 0 2.309-.78 4.1 4.1 0 0 0 1.545-4.39 4.1 4.1 0 0 0-1.31-2.054 29.2 29.2 0 0 0-37.648.33 4.07 4.07 0 0 0-1.204 4.465 4.07 4.07 0 0 0 3.748 2.709z"
+      ></path>
+      <path
+        stroke={brandColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="0.71"
+        d="m204.599 95.366-14.83-8.547 14.83-8.572M130.676 95.366l14.83-8.547-14.83-8.572"
+      ></path>
+      <path
+        stroke={brandColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M49.352 149.625v10.964M43.883 155.094h10.963"
+      ></path>
+      <path fill={brandColor} d="M256.695 157.383a2.493 2.493 0 1 0 0-4.986 2.493 2.493 0 0 0 0 4.986"></path>
+    </svg>
+  </i>
+);
+
+export const EmptyChapters: React.FC<{ bgColor: string; brandColor: string; fontColor: string; size: string }> = ({
+  bgColor,
+  brandColor,
+  fontColor,
+  size,
+}) => (
+  <i style={{ fontSize: size, lineHeight: 1 }}>
+    <svg xmlns="http://www.w3.org/2000/svg" width={"1em"} height={"0.87em"} fill="none" viewBox="0 0 118 104">
+      <path
+        fill={bgColor}
+        d="M79.451 34.6c-8.37 0-16.89-.34-24.86-2.56-7.82-2.17-15-6.38-21.4-11.25-4.19-3.17-8-5.69-13.44-5.31a24.84 24.84 0 0 0-14.52 5.7c-6.92 6-5.88 17.23-3.11 25.12 4.16 11.88 16.82 20.11 27.58 25.49 12.43 6.21 26.09 9.81 39.78 11.89 12 1.82 27.42 3.15 37.82-4.69 9.55-7.2 12.17-23.64 9.83-34.74a13.668 13.668 0 0 0-4.91-8.33c-6.71-4.9-16.72-1.63-24.26-1.46-2.8.06-5.65.13-8.51.14ZM58.971 103.13c20.275 0 36.71-1.025 36.71-2.29 0-1.265-16.435-2.29-36.71-2.29-20.274 0-36.71 1.025-36.71 2.29 0 1.265 16.436 2.29 36.71 2.29Z"
+      />
+      <path
+        fill={brandColor}
+        d="m85.521 4.302-56.535 20.42a3.75 3.75 0 0 0-2.253 4.802l11.928 33.021a3.75 3.75 0 0 0 4.801 2.253l56.535-20.42a3.75 3.75 0 0 0 2.253-4.801L90.322 6.555a3.75 3.75 0 0 0-4.8-2.253Z"
+      />
+      <path
+        fill={fontColor}
+        d="M42.201 82.44a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96ZM68.221 1.96a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96Z"
+      />
+      <path
+        stroke={bgColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M40.991 8.29v4.31M38.831 10.45h4.31M104.221 24.22v4.3M102.061 26.37h4.31"
+      />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M87.679 26.254 28.235 35.18a3.75 3.75 0 0 0-3.151 4.265l5.214 34.721a3.75 3.75 0 0 0 4.265 3.151l59.443-8.926a3.75 3.75 0 0 0 3.152-4.265l-5.214-34.72a3.75 3.75 0 0 0-4.265-3.152Z"
+      />
+      <path
+        fill={brandColor}
+        d="m36.808 39.407-5.004.752a1.53 1.53 0 0 0-1.286 1.74l.752 5.004a1.53 1.53 0 0 0 1.74 1.285l5.004-.75a1.53 1.53 0 0 0 1.286-1.741l-.752-5.004a1.53 1.53 0 0 0-1.74-1.286ZM57.748 37.305 43.122 39.5a.84.84 0 0 0-.706.955l.065.435a.84.84 0 0 0 .956.706l14.626-2.196a.84.84 0 0 0 .706-.955l-.066-.435a.84.84 0 0 0-.955-.706ZM68.004 40.337l-23.665 3.554a1.06 1.06 0 0 0 .315 2.096l23.665-3.553a1.06 1.06 0 1 0-.315-2.097ZM38.808 51.407l-5.004.752a1.53 1.53 0 0 0-1.286 1.74l.752 5.004a1.53 1.53 0 0 0 1.74 1.285l5.004-.75a1.53 1.53 0 0 0 1.286-1.741l-.752-5.004a1.53 1.53 0 0 0-1.74-1.286ZM59.748 49.305 45.122 51.5a.84.84 0 0 0-.706.955l.065.435a.84.84 0 0 0 .956.706l14.626-2.196a.84.84 0 0 0 .706-.955l-.066-.435a.84.84 0 0 0-.955-.706ZM70.004 52.337l-23.665 3.554a1.06 1.06 0 0 0 .315 2.096l23.665-3.553a1.06 1.06 0 1 0-.315-2.097ZM40.808 63.407l-5.004.752a1.53 1.53 0 0 0-1.286 1.74l.752 5.004a1.53 1.53 0 0 0 1.74 1.285l5.004-.75a1.53 1.53 0 0 0 1.286-1.741l-.752-5.004a1.53 1.53 0 0 0-1.74-1.286ZM61.748 61.305 47.122 63.5a.84.84 0 0 0-.706.955l.065.435a.84.84 0 0 0 .956.706l14.626-2.196a.84.84 0 0 0 .706-.955l-.066-.435a.84.84 0 0 0-.955-.706ZM72.004 64.337l-23.665 3.554a1.06 1.06 0 0 0 .315 2.096l23.665-3.553a1.06 1.06 0 1 0-.315-2.097Z"
+      />
+    </svg>
+  </i>
+);
+
+export const EmptyEvents: React.FC<{ bgColor: string; brandColor: string; fontColor: string; size: string }> = ({
+  bgColor,
+  brandColor,
+  fontColor,
+  size,
+}) => (
+  <i style={{ fontSize: size, lineHeight: 1 }}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height=".882em" fill="none" viewBox="0 0 119 105">
+      <path
+        fill={bgColor}
+        d="M79.66 36.42c-8.37 0-16.89-.34-24.86-2.56-7.82-2.17-15-6.38-21.4-11.25-4.19-3.17-8-5.69-13.44-5.31A24.84 24.84 0 0 0 5.44 23c-6.92 6-5.88 17.23-3.11 25.12C6.49 60 19.15 68.23 29.91 73.61 42.34 79.82 56 83.42 69.69 85.5c12 1.82 27.42 3.15 37.82-4.69 9.55-7.2 12.17-23.64 9.83-34.74a13.668 13.668 0 0 0-4.91-8.33c-6.71-4.9-16.72-1.63-24.26-1.46-2.8.06-5.65.13-8.51.14ZM59.18 104.95c20.274 0 36.71-1.025 36.71-2.29 0-1.265-16.436-2.29-36.71-2.29s-36.71 1.025-36.71 2.29c0 1.265 16.436 2.29 36.71 2.29Z"
+      />
+      <path fill={brandColor} d="M6.54 72.43a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96Z" />
+      <path stroke={fontColor} strokeLinecap="round" strokeLinejoin="round" d="M48.78 84.86v4.31M46.63 87.02h4.3" />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M100.41 17.08H17.94a3.86 3.86 0 0 0-3.86 3.86v56.57a3.86 3.86 0 0 0 3.86 3.86h82.47a3.86 3.86 0 0 0 3.86-3.86V20.94a3.86 3.86 0 0 0-3.86-3.86Z"
+      />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M92.11 34.18H26.23a2.76 2.76 0 0 0-2.76 2.76v35.95a2.76 2.76 0 0 0 2.76 2.76h65.88a2.76 2.76 0 0 0 2.76-2.76V36.94a2.76 2.76 0 0 0-2.76-2.76Z"
+      />
+      <path
+        fill={brandColor}
+        d="M104.27 27.91V21a3.854 3.854 0 0 0-1.127-2.736 3.851 3.851 0 0 0-2.733-1.134H17.94A3.86 3.86 0 0 0 14.08 21v7l90.19-.09Z"
+      />
+      <path stroke={brandColor} strokeLinecap="round" strokeLinejoin="round" d="M41.18 10.59v12.45M77.18 10.59v12.45" />
+      <path
+        fill={brandColor}
+        d="M90.55 11.42a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96ZM29.31 12.28a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96Z"
+      />
+      <path
+        stroke={brandColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M54.39 4.81v4.3M52.24 6.96h4.3M9.31.93v4.3M7.16 3.08h4.31M46.67 64.16a12.81 12.81 0 0 1 25 0"
+      />
+      <path
+        fill={brandColor}
+        d="M73.3 49.24a1.78 1.78 0 1 0 0-3.56 1.78 1.78 0 0 0 0 3.56ZM45.05 49.24a1.78 1.78 0 1 0 0-3.56 1.78 1.78 0 0 0 0 3.56Z"
+      />
+    </svg>
+  </i>
+);
+export const EmptyNotification: React.FC<{ bgColor: string; brandColor: string; fontColor: string; size: string }> = ({
+  bgColor,
+  brandColor,
+  fontColor,
+  size,
+}) => (
+  <i style={{ fontSize: size, lineHeight: 1 }}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height=".87em" fill="none" viewBox="0 0 119 104">
+      <path fill="#CFCFCF" d="M16.11 76.13a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96Z" />
+      <path
+        fill={bgColor}
+        d="M79.66 35.17c-8.37 0-16.89-.34-24.86-2.56-7.82-2.17-15-6.38-21.4-11.25-4.19-3.17-8-5.7-13.44-5.32a24.91 24.91 0 0 0-14.52 5.67C-1.48 27.77-.44 39 2.33 46.86 6.49 58.73 19.15 67 29.91 72.35 42.34 78.56 56 82.17 69.69 84.24c12 1.83 27.42 3.15 37.82-4.68 9.55-7.21 12.17-23.65 9.83-34.75a13.652 13.652 0 0 0-4.91-8.32c-6.71-4.91-16.72-1.63-24.26-1.47-2.8.06-5.65.13-8.51.15Z"
+      />
+      <path
+        fill={brandColor}
+        d="M62.23 85.48c6.235 0 11.29-5.055 11.29-11.29 0-6.235-5.055-11.29-11.29-11.29-6.235 0-11.29 5.055-11.29 11.29 0 6.235 5.055 11.29 11.29 11.29Z"
+      />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M50.564 3.706A4.87 4.87 0 0 1 56.377 7.4l1.804 8.09-9.526 2.125-1.804-8.091a4.872 4.872 0 0 1 3.713-5.818Z"
+      />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m95.07 67.18-57.89 12.9a2.12 2.12 0 0 1-2.5-2.66l.24-.83c2-7.09 3.74-14.9 2.14-22.1l-3.42-15.36C30.76 26.22 38.5 13.07 51.34 9.9a24.19 24.19 0 0 1 29.44 18.22L84.31 44c1.61 7.2 6.47 13.56 11.33 19.1l.57.65a2.129 2.129 0 0 1-1.14 3.43Z"
+      />
+      <path
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M52.25 57.28a10.22 10.22 0 0 1 19.5-4.35"
+      />
+      <path
+        fill={fontColor}
+        d="M70.11 41.05a1.42 1.42 0 1 0 0-2.84 1.42 1.42 0 0 0 0 2.84ZM48.09 45.96a1.42 1.42 0 1 0 0-2.84 1.42 1.42 0 0 0 0 2.84Z"
+      />
+      <path
+        fill={bgColor}
+        d="M74.57 2.2a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96ZM16.11 76.13a.98.98 0 1 0 0-1.96.98.98 0 0 0 0 1.96Z"
+      />
+      <path
+        stroke="#BABABA"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M101.65 24.89v4.3M99.5 27.04h4.3M103.61 89.63v4.3M101.46 91.78h4.3M28.43 8.59v4.3M26.28 10.74h4.3"
+      />
+      <path
+        fill={bgColor}
+        d="M59.58 103.7c20.275 0 36.71-1.025 36.71-2.29 0-1.265-16.436-2.29-36.71-2.29s-36.71 1.025-36.71 2.29c0 1.265 16.436 2.29 36.71 2.29Z"
+      />
+      <path
+        fill={bgColor}
+        stroke={fontColor}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M94.65 22.45a11.48 11.48 0 0 1-11.47 11.47c-.374 0-.748-.02-1.12-.06l-3.4 5.55-1.06-6.95a11.47 11.47 0 1 1 17.05-10v-.01Z"
+      />
+      <path
+        fill={fontColor}
+        stroke={fontColor}
+        strokeMiterlimit={10}
+        d="M78.28 23.61a1.16 1.16 0 1 0 0-2.32 1.16 1.16 0 0 0 0 2.32ZM83.18 23.61a1.16 1.16 0 1 0 0-2.32 1.16 1.16 0 0 0 0 2.32ZM88.08 23.61a1.16 1.16 0 1 0 0-2.32 1.16 1.16 0 0 0 0 2.32Z"
+      />
+    </svg>
+  </i>
+);
 export default {
   send: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" height={"1em"} width={"1em"}>
       <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+    </svg>
+  ),
+  rectangleStack: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122"
+      />
+    </svg>
+  ),
+  academicCap: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
+      <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286.921.304 1.83.634 2.726.99v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.66a6.727 6.727 0 0 0 .551-1.607 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.667 2.25 2.25 0 0 0 2.12 0Z" />
+      <path d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z" />
+    </svg>
+  ),
+  arrowTrendingDown: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181"
+      />
+    </svg>
+  ),
+  arrowTrendingUp: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"
+      />
+    </svg>
+  ),
+  desktop: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path
+        fillRule="evenodd"
+        d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  mobile: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
+      <path
+        fillRule="evenodd"
+        d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM7.5 4.125C7.5 3.504 8.004 3 8.625 3H9.75v.375c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V3h1.125c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-6.75A1.125 1.125 0 0 1 7.5 19.875V4.125Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  quotes: (
+    <svg width="1em" height="1em" viewBox="0 0 23 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M7.73434 1.61621L9.67104 3.38397L4.59436 8.01786V8.75009H10.0721V17.5001H1.85547V6.98232L7.73434 1.61621Z"
+        fill="currentColor"
+      />
+      <path
+        d="M21.0253 8.75009H15.5475V8.01786L20.6241 3.38397L18.6875 1.61621L12.8086 6.98232V17.5001H21.0253V8.75009Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  testimonials: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+      />
     </svg>
   ),
   info: (
@@ -20,6 +381,53 @@ export default {
       />
     </svg>
   ),
+  brand: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      height={"1em"}
+      width={"1em"}
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"
+      />
+    </svg>
+  ),
+  pencilEdit: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+      <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+    </svg>
+  ),
+  site: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path
+        fillRule="evenodd"
+        d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
   events: (
     <svg
       height={"1em"}
@@ -33,6 +441,24 @@ export default {
         fillRule="evenodd"
         d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
         clipRule="evenodd"
+      />
+    </svg>
+  ),
+  faq: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
       />
     </svg>
   ),
@@ -218,10 +644,47 @@ export default {
       />
     </svg>
   ),
+  newsPaper: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      height={"1em"}
+      width={"1em"}
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z"
+      />
+    </svg>
+  ),
+  update: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      height={"1em"}
+      width={"1em"}
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+      />
+    </svg>
+  ),
   dashboard: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={18}
+      width={"1em"}
+      height={"1em"}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
@@ -238,8 +701,8 @@ export default {
   download: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      height={15}
-      width={15}
+      height={"1em"}
+      width={"1em"}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
@@ -339,6 +802,42 @@ export default {
       />
     </svg>
   ),
+  blog: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+      />
+    </svg>
+  ),
+
+  courseConfig: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      height={"1em"}
+      width={"1em"}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"
+      />
+    </svg>
+  ),
   courses: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -346,7 +845,8 @@ export default {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      width={18}
+      width={"1em"}
+      height={"1em"}
     >
       <path
         strokeLinecap="round"
@@ -425,7 +925,8 @@ export default {
   setting: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={18}
+      width={"1em"}
+      widths={"1em"}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
@@ -440,10 +941,11 @@ export default {
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
   ),
-  nottification: (
+  notification: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={18}
+      width={"1em"}
+      height={"1em"}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
@@ -494,14 +996,15 @@ export default {
   arrowRight: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={25}
+      height={"1em"}
+      width={"1em"}
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className="w-6 h-6"
+      className="size-6"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
     </svg>
   ),
   configuration: (
@@ -539,10 +1042,10 @@ export default {
       xmlns="http://www.w3.org/2000/svg"
       width="1em"
       height="1em"
-      fill="inherit"
+      fill="currentColor"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
-      stroke="inherit"
+      stroke="currentColor"
       className="cross_svg_icon"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -570,8 +1073,8 @@ export default {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
-      width={25}
-      height={25}
+      width={"1em"}
+      height={"1em"}
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
@@ -588,8 +1091,8 @@ export default {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
-      width={25}
-      height={25}
+      width={"1em"}
+      height={"1em"}
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
@@ -623,7 +1126,8 @@ export default {
   ),
   verticalThreeDots: (
     <svg
-      width={30}
+      width={"1em"}
+      height={"1em"}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -843,13 +1347,103 @@ export default {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      height={20}
-      width={20}
+      height={"1em"}
+      width={"1em"}
     >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+      />
+    </svg>
+  ),
+  calendarDaysFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={20}
+      width={20}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M12.75 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM7.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM8.25 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM9.75 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.5 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM12.75 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM14.25 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+      <path
+        fillRule="evenodd"
+        d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  checkBadgeFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      height={"1em"}
+      width={"1em"}
+      className="size-6"
+    >
+      <path
+        fillRule="evenodd"
+        d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  clockFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      height={20}
+      width={20}
+      className="size-6"
+    >
+      <path
+        fillRule="evenodd"
+        d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  bookOpenFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      height={20}
+      width={20}
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+    </svg>
+  ),
+  chatBubbleFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      height={20}
+      width={20}
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
+      <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
+    </svg>
+  ),
+  playFilled: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      height={20}
+      width={20}
+      fill="currentColor"
+      className="size-6"
+    >
+      <path
+        fillRule="evenodd"
+        d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.024-.983a1.125 1.125 0 0 1 0 1.966l-5.603 3.113A1.125 1.125 0 0 1 9 15.113V8.887c0-.857.921-1.4 1.671-.983l5.603 3.113Z"
+        clipRule="evenodd"
       />
     </svg>
   ),
@@ -860,8 +1454,8 @@ export default {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      height={20}
-      width={20}
+      height={"1em"}
+      width={"1em"}
     >
       <path
         strokeLinecap="round"
@@ -894,8 +1488,8 @@ export default {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      height={20}
-      width={20}
+      height={"1em"}
+      width={"1em"}
     >
       <path
         strokeLinecap="round"
@@ -913,6 +1507,19 @@ export default {
       stroke="currentColor"
       height={20}
       width={20}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
+  ),
+  chevronDownOutline: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      height={"1em"}
+      width={"1em"}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
     </svg>
@@ -941,8 +1548,8 @@ export default {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      height={20}
-      width={20}
+      height={"1em"}
+      width={"1em"}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
     </svg>
@@ -998,19 +1605,16 @@ export default {
   ),
   verticalAdjustment: (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      height={"1em"}
-      width={"1em"}
+      width="1em"
+      height="1em"
       viewBox="0 0 24 24"
-      strokeWidth={1.5}
+      fill="none"
       stroke="currentColor"
-      className="size-6"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
+        d="M16 17C17.1046 17 18 17.8954 18 19C18 20.1046 17.1046 21 16 21C14.8954 21 14 20.1046 14 19C14 17.8954 14.8954 17 16 17ZM8 17C9.10457 17 10 17.8954 10 19C10 20.1046 9.10457 21 8 21C6.89543 21 6 20.1046 6 19C6 17.8954 6.89543 17 8 17ZM16 10C17.1046 10 18 10.8954 18 12C18 13.1046 17.1046 14 16 14C14.8954 14 14 13.1046 14 12C14 10.8954 14.8954 10 16 10ZM8 10C9.10457 10 10 10.8954 10 12C10 13.1046 9.10457 14 8 14C6.89543 14 6 13.1046 6 12C6 10.8954 6.89543 10 8 10ZM16 3C17.1046 3 18 3.89543 18 5C18 6.10457 17.1046 7 16 7C14.8954 7 14 6.10457 14 5C14 3.89543 14.8954 3 16 3ZM8 3C9.10457 3 10 3.89543 10 5C10 6.10457 9.10457 7 8 7C6.89543 7 6 6.10457 6 5C6 3.89543 6.89543 3 8 3Z"
+        fill="currentColor"
       />
     </svg>
   ),
@@ -1074,7 +1678,7 @@ export default {
     </svg>
   ),
   check: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" height={20} width={20}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" height={"1em"} width={"1em"}>
       <path
         fillRule="evenodd"
         d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
@@ -1089,6 +1693,19 @@ export default {
         d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
         clipRule="evenodd"
       />
+    </svg>
+  ),
+  boxEdit: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+      <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
     </svg>
   ),
   edit: (
@@ -1123,7 +1740,7 @@ export default {
     </svg>
   ),
   lock: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" height={20} width={20}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" height={"1em"} width={"1em"}>
       <path
         fillRule="evenodd"
         d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
@@ -2151,6 +2768,7 @@ export default {
       fill="none"
       viewBox="0 0 24 24"
       height={25}
+      stroke="currentColor"
       width={25}
       strokeWidth={1.5}
       className="size-6"
@@ -2386,15 +3004,35 @@ export default {
       </g>
     </svg>
   ),
+  hero: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 8.25V18a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 18V8.25m-18 0V6a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6ZM7.5 6h.008v.008H7.5V6Zm2.25 0h.008v.008H9.75V6Z"
+      />
+    </svg>
+  ),
   github: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      height={"1em"}
+      width={"1em"}
+      fill="currentColor"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <g clipPath="url(#clip0_2875_573)">
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12.0099 0C5.36875 0 0 5.40833 0 12.0992C0 17.4475 3.43994 21.9748 8.21205 23.5771C8.80869 23.6976 9.02724 23.3168 9.02724 22.9965C9.02724 22.716 9.00757 21.7545 9.00757 20.7527C5.6667 21.474 4.97099 19.3104 4.97099 19.3104C4.43409 17.9082 3.63858 17.5478 3.63858 17.5478C2.54511 16.8066 3.71823 16.8066 3.71823 16.8066C4.93117 16.8868 5.56763 18.0486 5.56763 18.0486C6.64118 19.8913 8.37111 19.3707 9.06706 19.0501C9.16638 18.2688 9.48473 17.728 9.82275 17.4276C7.15817 17.1471 4.35469 16.1055 4.35469 11.458C4.35469 10.1359 4.8316 9.05428 5.58729 8.21304C5.46807 7.91263 5.0504 6.67043 5.70677 5.00787C5.70677 5.00787 6.72083 4.6873 9.00732 6.24981C9.98625 5.98497 10.9958 5.85024 12.0099 5.84911C13.024 5.84911 14.0577 5.98948 15.0123 6.24981C17.299 4.6873 18.3131 5.00787 18.3131 5.00787C18.9695 6.67043 18.5515 7.91263 18.4323 8.21304C19.2079 9.05428 19.6652 10.1359 19.6652 11.458C19.6652 16.1055 16.8617 17.1269 14.1772 17.4276C14.6148 17.8081 14.9924 18.5292 14.9924 19.6711C14.9924 21.2936 14.9727 22.5957 14.9727 22.9962C14.9727 23.3168 15.1915 23.6976 15.7879 23.5774C20.56 21.9745 23.9999 17.4475 23.9999 12.0992C24.0196 5.40833 18.6312 0 12.0099 0Z"
-          fill="white"
-        />
+        <path d="M12.0099 0C5.36875 0 0 5.40833 0 12.0992C0 17.4475 3.43994 21.9748 8.21205 23.5771C8.80869 23.6976 9.02724 23.3168 9.02724 22.9965C9.02724 22.716 9.00757 21.7545 9.00757 20.7527C5.6667 21.474 4.97099 19.3104 4.97099 19.3104C4.43409 17.9082 3.63858 17.5478 3.63858 17.5478C2.54511 16.8066 3.71823 16.8066 3.71823 16.8066C4.93117 16.8868 5.56763 18.0486 5.56763 18.0486C6.64118 19.8913 8.37111 19.3707 9.06706 19.0501C9.16638 18.2688 9.48473 17.728 9.82275 17.4276C7.15817 17.1471 4.35469 16.1055 4.35469 11.458C4.35469 10.1359 4.8316 9.05428 5.58729 8.21304C5.46807 7.91263 5.0504 6.67043 5.70677 5.00787C5.70677 5.00787 6.72083 4.6873 9.00732 6.24981C9.98625 5.98497 10.9958 5.85024 12.0099 5.84911C13.024 5.84911 14.0577 5.98948 15.0123 6.24981C17.299 4.6873 18.3131 5.00787 18.3131 5.00787C18.9695 6.67043 18.5515 7.91263 18.4323 8.21304C19.2079 9.05428 19.6652 10.1359 19.6652 11.458C19.6652 16.1055 16.8617 17.1269 14.1772 17.4276C14.6148 17.8081 14.9924 18.5292 14.9924 19.6711C14.9924 21.2936 14.9727 22.5957 14.9727 22.9962C14.9727 23.3168 15.1915 23.6976 15.7879 23.5774C20.56 21.9745 23.9999 17.4475 23.9999 12.0992C24.0196 5.40833 18.6312 0 12.0099 0Z" />
       </g>
       <defs>
         <clipPath id="clip0_2875_573">
@@ -2404,16 +3042,83 @@ export default {
     </svg>
   ),
   youtube: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M23.7609 7.20005C23.7609 7.20005 23.5266 5.54536 22.8047 4.8188C21.8906 3.86255 20.8688 3.85786 20.4 3.80161C17.0438 3.55786 12.0047 3.55786 12.0047 3.55786H11.9953C11.9953 3.55786 6.95625 3.55786 3.6 3.80161C3.13125 3.85786 2.10938 3.86255 1.19531 4.8188C0.473438 5.54536 0.24375 7.20005 0.24375 7.20005C0.24375 7.20005 0 9.14536 0 11.086V12.9047C0 14.8454 0.239062 16.7907 0.239062 16.7907C0.239062 16.7907 0.473437 18.4454 1.19062 19.1719C2.10469 20.1282 3.30469 20.0954 3.83906 20.1985C5.76094 20.3813 12 20.4375 12 20.4375C12 20.4375 17.0438 20.4282 20.4 20.1891C20.8688 20.1329 21.8906 20.1282 22.8047 19.1719C23.5266 18.4454 23.7609 16.7907 23.7609 16.7907C23.7609 16.7907 24 14.85 24 12.9047V11.086C24 9.14536 23.7609 7.20005 23.7609 7.20005ZM9.52031 15.1125V8.36724L16.0031 11.7516L9.52031 15.1125Z"
-        fill="white"
-      />
+    <svg
+      height={"1em"}
+      fill="currentColor"
+      stroke="currentColor"
+      width={"1em"}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M23.7609 7.20005C23.7609 7.20005 23.5266 5.54536 22.8047 4.8188C21.8906 3.86255 20.8688 3.85786 20.4 3.80161C17.0438 3.55786 12.0047 3.55786 12.0047 3.55786H11.9953C11.9953 3.55786 6.95625 3.55786 3.6 3.80161C3.13125 3.85786 2.10938 3.86255 1.19531 4.8188C0.473438 5.54536 0.24375 7.20005 0.24375 7.20005C0.24375 7.20005 0 9.14536 0 11.086V12.9047C0 14.8454 0.239062 16.7907 0.239062 16.7907C0.239062 16.7907 0.473437 18.4454 1.19062 19.1719C2.10469 20.1282 3.30469 20.0954 3.83906 20.1985C5.76094 20.3813 12 20.4375 12 20.4375C12 20.4375 17.0438 20.4282 20.4 20.1891C20.8688 20.1329 21.8906 20.1282 22.8047 19.1719C23.5266 18.4454 23.7609 16.7907 23.7609 16.7907C23.7609 16.7907 24 14.85 24 12.9047V11.086C24 9.14536 23.7609 7.20005 23.7609 7.20005ZM9.52031 15.1125V8.36724L16.0031 11.7516L9.52031 15.1125Z" />
     </svg>
   ),
   discord: (
-    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      height={"1em"}
+      fill="currentColor"
+      stroke="currentColor"
+      width={"1em"}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path d="M20.317 4.15557C18.7873 3.45369 17.147 2.93658 15.4319 2.6404C15.4007 2.63469 15.3695 2.64897 15.3534 2.67754C15.1424 3.05276 14.9087 3.54225 14.7451 3.927C12.9004 3.65083 11.0652 3.65083 9.25832 3.927C9.09465 3.5337 8.85248 3.05276 8.64057 2.67754C8.62449 2.64992 8.59328 2.63564 8.56205 2.6404C6.84791 2.93563 5.20756 3.45275 3.67693 4.15557C3.66368 4.16129 3.65233 4.17082 3.64479 4.18319C0.533392 8.83155 -0.31895 13.3657 0.0991801 17.8436C0.101072 17.8655 0.11337 17.8864 0.130398 17.8997C2.18321 19.4073 4.17171 20.3225 6.12328 20.9291C6.15451 20.9386 6.18761 20.9272 6.20748 20.9015C6.66913 20.2711 7.08064 19.6063 7.43348 18.9073C7.4543 18.8664 7.43442 18.8178 7.39186 18.8016C6.73913 18.554 6.1176 18.2521 5.51973 17.9093C5.47244 17.8816 5.46865 17.814 5.51216 17.7816C5.63797 17.6873 5.76382 17.5893 5.88396 17.4902C5.90569 17.4721 5.93598 17.4683 5.96153 17.4797C9.88928 19.273 14.1415 19.273 18.023 17.4797C18.0485 17.4674 18.0788 17.4712 18.1015 17.4893C18.2216 17.5883 18.3475 17.6873 18.4742 17.7816C18.5177 17.814 18.5149 17.8816 18.4676 17.9093C17.8697 18.2588 17.2482 18.554 16.5945 18.8006C16.552 18.8168 16.533 18.8664 16.5538 18.9073C16.9143 19.6054 17.3258 20.2701 17.7789 20.9005C17.7978 20.9272 17.8319 20.9386 17.8631 20.9291C19.8241 20.3225 21.8126 19.4073 23.8654 17.8997C23.8834 17.8864 23.8948 17.8664 23.8967 17.8445C24.3971 12.6676 23.0585 8.17064 20.3482 4.18414C20.3416 4.17082 20.3303 4.16129 20.317 4.15557ZM8.02002 15.117C6.8375 15.117 5.86313 14.0313 5.86313 12.6981C5.86313 11.3648 6.8186 10.2791 8.02002 10.2791C9.23087 10.2791 10.1958 11.3743 10.1769 12.6981C10.1769 14.0313 9.22141 15.117 8.02002 15.117ZM15.9947 15.117C14.8123 15.117 13.8379 14.0313 13.8379 12.6981C13.8379 11.3648 14.7933 10.2791 15.9947 10.2791C17.2056 10.2791 18.1705 11.3743 18.1516 12.6981C18.1516 14.0313 17.2056 15.117 15.9947 15.117Z" />
+    </svg>
+  ),
+  twitter: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      fill="currentColor"
+      stroke="currentColor"
+      viewBox="0 0 1920 1920"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M1920 311.856c-70.701 33.769-146.598 56.47-226.221 66.86 81.317-52.517 143.774-135.529 173.252-234.691-76.236 48.678-160.716 84.028-250.391 103.002-71.718-82.56-174.268-134.06-287.435-134.06-217.75 0-394.165 189.966-394.165 424.206 0 33.318 3.614 65.619 10.165 96.678C617.9 616.119 327.304 447.385 133.045 190.67c-33.77 62.57-53.309 135.53-53.309 213.233 0 147.162 91.031 276.818 196.744 353.054-64.602-2.26-157.101-21.46-157.101-53.309v5.648c0 205.327 114.41 376.658 294.55 415.849-32.978 9.487-78.38 14.795-114.409 14.795-25.412 0-55.454-2.71-79.624-7.793 50.26 168.509 193.13 291.163 365.478 294.777-134.852 113.506-306.07 181.383-490.616 181.383-31.85 0-64.038-2.033-94.758-5.873 174.494 120.17 381.176 190.532 603.67 190.532 724.97 0 1121.055-646.136 1121.055-1206.55 0-18.41-.452-36.932-1.356-55.116 77.026-59.746 143.887-134.4 196.631-219.444"
+        fill-rule="evenodd"
+      />
+    </svg>
+  ),
+  features: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height={"1em"}
+      width={"1em"}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="size-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z"
+      />
+    </svg>
+  ),
+
+  instagram: (
+    <svg
+      height={"1em"}
+      width={"1em"}
+      fill="currentColor"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        fill-rule="evenodd"
+        clipRule="evenodd"
+        d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
+      />
+      <path d="M18 5C17.4477 5 17 5.44772 17 6C17 6.55228 17.4477 7 18 7C18.5523 7 19 6.55228 19 6C19 5.44772 18.5523 5 18 5Z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M1.65396 4.27606C1 5.55953 1 7.23969 1 10.6V13.4C1 16.7603 1 18.4405 1.65396 19.7239C2.2292 20.8529 3.14708 21.7708 4.27606 22.346C5.55953 23 7.23969 23 10.6 23H13.4C16.7603 23 18.4405 23 19.7239 22.346C20.8529 21.7708 21.7708 20.8529 22.346 19.7239C23 18.4405 23 16.7603 23 13.4V10.6C23 7.23969 23 5.55953 22.346 4.27606C21.7708 3.14708 20.8529 2.2292 19.7239 1.65396C18.4405 1 16.7603 1 13.4 1H10.6C7.23969 1 5.55953 1 4.27606 1.65396C3.14708 2.2292 2.2292 3.14708 1.65396 4.27606ZM13.4 3H10.6C8.88684 3 7.72225 3.00156 6.82208 3.0751C5.94524 3.14674 5.49684 3.27659 5.18404 3.43597C4.43139 3.81947 3.81947 4.43139 3.43597 5.18404C3.27659 5.49684 3.14674 5.94524 3.0751 6.82208C3.00156 7.72225 3 8.88684 3 10.6V13.4C3 15.1132 3.00156 16.2777 3.0751 17.1779C3.14674 18.0548 3.27659 18.5032 3.43597 18.816C3.81947 19.5686 4.43139 20.1805 5.18404 20.564C5.49684 20.7234 5.94524 20.8533 6.82208 20.9249C7.72225 20.9984 8.88684 21 10.6 21H13.4C15.1132 21 16.2777 20.9984 17.1779 20.9249C18.0548 20.8533 18.5032 20.7234 18.816 20.564C19.5686 20.1805 20.1805 19.5686 20.564 18.816C20.7234 18.5032 20.8533 18.0548 20.9249 17.1779C20.9984 16.2777 21 15.1132 21 13.4V10.6C21 8.88684 20.9984 7.72225 20.9249 6.82208C20.8533 5.94524 20.7234 5.49684 20.564 5.18404C20.1805 4.43139 19.5686 3.81947 18.816 3.43597C18.5032 3.27659 18.0548 3.14674 17.1779 3.0751C16.2777 3.00156 15.1132 3 13.4 3Z"
+      />
     </svg>
   ),
 };

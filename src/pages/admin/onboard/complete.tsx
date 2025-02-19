@@ -14,25 +14,24 @@ const SiteSetupPage: NextPage<{ siteConfig: PageSiteConfig }> = ({ siteConfig })
 
   const setupOptions: ISiteSetupCard[] = [
     {
-      icon: "/img/landing/auth.png",
-      title: "Authentication",
-      description: "Configure authentication with Google, Github or any other",
-      link: "#",
-      iconBgColor: "red",
+      icon: "/img/landing/site-design.png",
+      title: "Site Design",
+      description:
+        "Customize your site to suit your brand's color theme, add content to your landing page and much more",
+      link: "/admin/site/design",
     },
     {
-      icon: "/img/landing/auth.png",
-      title: "Authentication",
-      description: "Configure authentication with Google, Github or any other",
-      link: "#",
-      iconBgColor: "blue",
+      icon: "/img/landing/video-stream.png",
+      title: "Content Management",
+      description:
+        "Configure video streaming, image and other file storage that will be used when creating lessons, assignments and certificates",
+      link: "/admin/settings?tab=cms",
     },
     {
-      icon: "/img/landing/auth.png",
-      title: "Authentication",
-      description: "Configure authentication with Google, Github or any other",
-      link: "#",
-      iconBgColor: "green",
+      icon: "/img/landing/payment.png",
+      title: "Payments System",
+      description: "Configure your payment gateway through which you can earn instantly from all the course sales",
+      link: "/admin/settings?tab=pms",
     },
   ];
 
@@ -51,14 +50,7 @@ export default SiteSetupPage;
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const { site } = getSiteConfig();
   const siteConfig = site;
-  if (siteConfig.updated) {
-    return {
-      redirect: {
-        permanent: false,
-        destination: "/signup",
-      },
-    };
-  }
+
   return {
     props: {
       siteConfig,

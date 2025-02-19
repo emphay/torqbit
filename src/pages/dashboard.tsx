@@ -1,91 +1,64 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { useState } from "react";
 import styles from "../styles/Dashboard.module.scss";
-import { useSession } from "next-auth/react";
-import { List, Space, Spin, Tabs, TabsProps } from "antd";
-import SvgIcons from "@/components/SvgIcons";
-import Layout2 from "@/components/Layouts/Layout2";
-import ProgramService from "@/services/ProgramService";
-import Link from "next/link";
-import { NextPage } from "next";
-import { LoadingOutlined } from "@ant-design/icons";
-import { ISiderMenu, useAppContext } from "@/components/ContextApi/AppContext";
-import SpinLoader from "@/components/SpinLoader/SpinLoader";
+import { Flex, Switch } from "antd";
+import { GetServerSidePropsContext, NextPage } from "next";
+import AppLayout from "@/components/Layouts/AppLayout";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
+import { Role } from "@prisma/client";
+import { getCookieName } from "@/lib/utils";
+import { getToken } from "next-auth/jwt";
+import StudentDashboard from "@/components/Dashboard/StudentDashboard";
+import AdminDashboard from "@/components/Dashboard/Admin/AdminDashboard";
 
-const EnrolledCourseList: FC<{
-  courseData: { courseName: string; progress: string; courseId: number }[];
-  pageLoading: boolean;
-}> = ({ courseData, pageLoading }) => {
-  return (
-    <>
-      {pageLoading ? (
-        <>
-          <SpinLoader />
-        </>
-      ) : (
-        <List
-          size="small"
-          header={false}
-          footer={false}
-          bordered={false}
-          dataSource={courseData}
-          className={styles.enrolled_course_list}
-          renderItem={(item) => (
-            <Link href={`/courses/${item.courseId}`}>
-              <List.Item className={styles.enroll_course_item}>
-                <div>{item.courseName}</div>
-                <Space className={styles.completed_course} size={5}>
-                  <span>{item.progress}</span> <span>Completed</span>
-                </Space>
-              </List.Item>
-            </Link>
-          )}
-        />
-      )}
-    </>
-  );
-};
-
-const Dashboard: NextPage = () => {
-  const { data: user } = useSession();
-  const [pageLoading, setPageLoading] = useState<boolean>(false);
-
-  const [allRegisterCourse, setAllRegisterCourse] = useState<
-    { courseName: string; progress: string; courseId: number }[]
-  >([]);
-
-  const onChange = (key: string) => {};
-
-  const items: TabsProps["items"] = [
-    {
-      key: "1",
-      label: "Enrolled Courses",
-      className: "some-class",
-      icon: SvgIcons.courses,
-      children: <EnrolledCourseList courseData={allRegisterCourse} pageLoading={pageLoading} />,
-    },
-  ];
-  useEffect(() => {
-    setPageLoading(true);
-    ProgramService.getRegisterCourses(
-      (result) => {
-        setAllRegisterCourse(result.progress);
-        setPageLoading(false);
-      },
-      (error) => {
-        setPageLoading(false);
-      }
-    );
-  }, []);
+const Dashboard: NextPage<{ siteConfig: PageSiteConfig; userRole: Role }> = ({ siteConfig, userRole }) => {
+  const [viewMode, setViewMode] = useState<Role>(userRole);
 
   return (
-    <Layout2>
+    <AppLayout siteConfig={siteConfig}>
       <section className={styles.dashboard_content}>
-        <h3>Dashboard</h3>
+        <Flex justify="space-between">
+          <h3>{viewMode === Role.ADMIN ? "Admin Dashboard" : "Dashboard"}</h3>
+        </Flex>
 
-        <Tabs defaultActiveKey="1" className="content_tab" items={items} onChange={onChange} />
+        <AdminDashboard siteConfig={siteConfig} />
       </section>
-    </Layout2>
+    </AppLayout>
   );
 };
 
 export default Dashboard;
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const { req } = ctx;
+  const siteConfig = getSiteConfig();
+
+  let cookieName = getCookieName();
+
+  const user = await getToken({ req, secret: process.env.NEXT_PUBLIC_SECRET, cookieName });
+  const { site } = siteConfig;
+
+  if (user) {
+    if (user.role === Role.STUDENT) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: "/",
+        },
+      };
+    } else {
+      return {
+        props: {
+          siteConfig: site,
+          userRole: user.role,
+        },
+      };
+    }
+  } else {
+    return {
+      props: {
+        siteConfig: site,
+      },
+    };
+  }
+};

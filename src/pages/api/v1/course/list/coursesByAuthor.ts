@@ -2,7 +2,6 @@ import prisma from "@/lib/prisma";
 import { NextApiResponse, NextApiRequest } from "next";
 import { errorHandler } from "@/lib/api-middlewares/errorHandler";
 import { withMethods } from "@/lib/api-middlewares/with-method";
-import { withAuthentication } from "@/lib/api-middlewares/with-authentication";
 import { getCookieName } from "@/lib/utils";
 import { getToken } from "next-auth/jwt";
 import { Role } from "@prisma/client";
@@ -20,6 +19,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const query = req.query;
 
     const { courseListPreview } = query;
+
     if (token?.role === Role.ADMIN || courseListPreview === "true") {
       const allCourse = await prisma.course.findMany({
         select: {
@@ -27,10 +27,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           name: true,
           difficultyLevel: true,
           state: true,
-          thumbnail: true,
           description: true,
           totalResources: true,
           previewMode: true,
+          slug: true,
           user: {
             select: {
               name: true,
@@ -73,7 +73,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           name: true,
           difficultyLevel: true,
           state: true,
-          thumbnail: true,
+          slug: true,
+
           description: true,
           totalResources: true,
           previewMode: true,
@@ -118,4 +119,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 };
 
-export default withMethods(["GET"], withAuthentication(handler));
+export default withMethods(["GET"], handler);

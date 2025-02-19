@@ -2,18 +2,19 @@ import React, { FC, useEffect, useState } from "react";
 import styles from "../../../styles/Dashboard.module.scss";
 import { Button, Dropdown, Modal, Space, Table, Tabs, TabsProps, Tag, message } from "antd";
 import SvgIcons from "@/components/SvgIcons";
-import Layout2 from "@/components/Layouts/Layout2";
+
 import { useSession } from "next-auth/react";
 import ProgramService from "@/services/ProgramService";
 import { useRouter } from "next/router";
-import { NextPage } from "next";
+import { GetServerSidePropsContext, NextPage } from "next";
 import { Course } from "@prisma/client";
-import BlogList from "@/components/Admin/Content/BlogList";
-import BlogService from "@/services/BlogService";
+import ContentList from "@/components/Admin/Content/ContentList";
 import SubmissionList from "@/components/Assignment/Submissions/SubmissionList";
 import EventList from "@/components/Events/EventList";
-import EventService from "@/services/EventService";
 import { IContentTabType } from "@/types/courses/Course";
+import AppLayout from "@/components/Layouts/AppLayout";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
 
 export const convertSecToHourandMin = (seconds: number) => {
   let result = "";
@@ -42,7 +43,7 @@ export const convertSecToHourandMin = (seconds: number) => {
   return result;
 };
 
-const EnrolledCourseList: FC<{
+export const EnrolledCourseList: FC<{
   allCourses: any[] | undefined;
   handleCourseStatusUpdate: (courseId: number, newState: string) => void;
   handleCourseDelete: (courseId: number) => void;
@@ -94,7 +95,7 @@ const EnrolledCourseList: FC<{
                   key: "1",
                   label: "Edit",
                   onClick: () => {
-                    router.push(`/admin/content/course/${courseInfo?.key}/edit`);
+                    router.push(`/academy/course//${courseInfo?.key}/edit`);
                   },
                 },
                 {
@@ -170,12 +171,14 @@ const EnrolledCourseList: FC<{
   );
 };
 
-const Content: NextPage = () => {
+const Content: NextPage<{ siteConfig: PageSiteConfig }> = ({ siteConfig }) => {
   const { data: user } = useSession();
   const [modal, contextWrapper] = Modal.useModal();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [messageApi, contextMessageHolder] = message.useMessage();
   const [loading, setLoading] = useState<boolean>(false);
+  const [addLoading, setAddLoading] = useState<boolean>(false);
+
   const [activeTab, setActiveTab] = useState<string>("Add Course");
 
   const [coursesAuthored, setCoursesAuthored] = useState<{
@@ -228,7 +231,7 @@ const Content: NextPage = () => {
   useEffect(() => {
     setLoading(true);
 
-    ProgramService.getCoursesByAuthor(
+    ProgramService.getCourseList(
       false,
       (res) => {
         setCoursesAuthored({
@@ -299,21 +302,6 @@ const Content: NextPage = () => {
       ),
     },
     {
-      key: "BLOGS" as IContentTabType,
-      label: "Blogs",
-      children: <BlogList contentType="BLOG" />,
-    },
-    {
-      key: "UPDATES" as IContentTabType,
-      label: "Updates",
-      children: <BlogList contentType="UPDATE" />,
-    },
-    {
-      key: "SUBMISSIONS" as IContentTabType,
-      label: "Submissions",
-      children: <SubmissionList />,
-    },
-    {
       key: "EVENTS" as IContentTabType,
       label: "Events",
       children: <EventList />,
@@ -321,43 +309,40 @@ const Content: NextPage = () => {
   ];
 
   const previousDraft = (id: number) => {
-    router.push(`/admin/content/course/${id}/edit`);
-    setIsModalOpen(false);
-  };
-
-  const previousDraftBlog = (id: string) => {
-    router.push(`/admin/content/blog/${id}`);
+    router.push(`/academy/course/${id}/edit`);
     setIsModalOpen(false);
   };
 
   const handleOk = () => {
     setIsModalOpen(false);
-
+    setAddLoading(true);
     ProgramService.createDraftCourses(
       undefined,
       (result) => {
-        router.push(`/admin/content/course/${result.getCourse.courseId}/edit`);
+        setAddLoading(false);
+
+        router.push(`/academy/course//${result.getCourse.courseId}/edit`);
       },
-      (error) => {}
+      (error) => {
+        setAddLoading(false);
+
+        messageApi.error(error);
+      }
     );
   };
 
   const handleBlogOk = (contentType: string) => {
-    setIsModalOpen(false);
-
-    BlogService.createBlog(
-      contentType,
-      (result) => {
-        router.push(`/admin/content/blog/${result.blog.id}`);
-      },
-      (error) => {}
+    router.push(
+      `/admin/content/${contentType === "BLOG" ? "blog" : "update"}/${
+        contentType === "BLOG" ? "add-blog" : "add-update"
+      }`
     );
   };
 
   const onCreateDraftCourse = () => {
     showModal();
     if (router.query.id) {
-      router.push(`/admin/content/course/${router.query.id}/edit`);
+      router.push(`/academy/course//${router.query.id}/edit`);
     } else {
       ProgramService.getLatesDraftCourse(
         (result) => {
@@ -388,59 +373,22 @@ const Content: NextPage = () => {
     }
   };
 
-  const onCreateDraftBlog = (contentType: string) => {
-    showModal();
-    if (router.query.blogId) {
-      router.push(`/admin/content/blog/${router.query.blogId}`);
-    } else {
-      BlogService.getLatestDraftBlog(
-        contentType,
-        (result) => {
-          if (result.blog) {
-            modal.confirm({
-              title: "Choose from the below options?",
-              content: (
-                <>
-                  <p>
-                    You currently have unsaved changes that you had made while creating the {contentType.toLowerCase()}.
-                  </p>
-                </>
-              ),
-              footer: (
-                <Space>
-                  <Button type="primary" onClick={() => previousDraftBlog(result.blog.id)}>
-                    Previous draft {contentType.toLowerCase()}
-                  </Button>
-                  or
-                  <Button onClick={() => handleBlogOk(contentType)}>Create a new {contentType.toLowerCase()}</Button>
-                </Space>
-              ),
-            });
-          } else {
-            handleBlogOk(contentType);
-          }
-        },
-        (error) => {}
-      );
-    }
-  };
-
   const handleActionButton = () => {
     switch (activeTab) {
       case "Add Course":
         return onCreateDraftCourse();
 
       case "Add Blog":
-        return onCreateDraftBlog("BLOG");
+        return handleBlogOk("BLOG");
       case "Add Updates":
-        return onCreateDraftBlog("UPDATE");
+        return handleBlogOk("UPDATE");
       case "Add Event":
         return router.push(`/admin/content/events/add`);
     }
   };
 
   return (
-    <Layout2>
+    <AppLayout siteConfig={siteConfig}>
       {contextMessageHolder}
       <section className={styles.dashboard_content}>
         <h3>Content</h3>
@@ -452,9 +400,14 @@ const Content: NextPage = () => {
           tabBarExtraContent={
             <>
               {activeTab !== "Submission" && (
-                <Button type="primary" onClick={handleActionButton} className={styles.add_user_btn}>
+                <Button
+                  loading={addLoading}
+                  type="primary"
+                  onClick={handleActionButton}
+                  className={styles.add_user_btn}
+                >
                   <span>{activeTab}</span>
-                  {SvgIcons.arrowRight}
+                  <i style={{ fontSize: 18, lineHeight: 0 }}> {SvgIcons.arrowRight}</i>
                 </Button>
               )}
             </>
@@ -467,8 +420,18 @@ const Content: NextPage = () => {
         />
         {contextWrapper}
       </section>
-    </Layout2>
+    </AppLayout>
   );
 };
 
 export default Content;
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const siteConfig = getSiteConfig();
+  const { site } = siteConfig;
+  return {
+    props: {
+      siteConfig: site,
+    },
+  };
+};

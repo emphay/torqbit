@@ -1,11 +1,35 @@
-import { Button, Drawer, Form, FormInstance, Input, InputNumber, message, Select, Space } from "antd";
+import { Button, Col, Drawer, Form, Input, InputNumber, message, Radio, Row, Space, Steps } from "antd";
 import styles from "@/styles/AddAssignment.module.scss";
-import appConstant from "@/services/appConstant";
-import TextEditor from "@/components/Editor/Quilljs/Editor";
 import { FC, useEffect, useState } from "react";
-import AssignmentService from "@/services/AssignmentService";
+import AssignmentService from "@/services/course/AssignmentService";
 import { ResourceContentType } from "@prisma/client";
-import { CloseOutlined } from "@ant-design/icons";
+import { DeleteFilled, PlusOutlined } from "@ant-design/icons";
+import {
+  IAssignmentDetails,
+  AssignmentType,
+  MultipleChoiceQA,
+  MCQAssignment,
+  SubjectiveAssignment,
+  QuestionScore,
+} from "@/types/courses/assignment";
+import ConfigFormLayout from "@/components/Configuration/ConfigFormLayout";
+import ConfigForm from "@/components/Configuration/ConfigForm";
+import MCQForm from "./MCQForm/MCQForm";
+import SubjectiveAssignmentForm from "./SubjectiveAssignment/SubjectiveAssignmentForm";
+import { cleanEmptyOptions, findEmptyCorrectOptions, findEmptyGivenOptions } from "@/services/helper";
+import { MessageInstance } from "antd/es/message/interface";
+
+export const createEmptyQuestion = (id: string): MultipleChoiceQA => ({
+  id,
+  title: "",
+  description: "",
+  options: [
+    { key: "A", text: "" },
+    { key: "B", text: "" },
+  ],
+  correctOptionIndex: [],
+  answerExplanation: "",
+});
 
 const AddAssignment: FC<{
   setResourceDrawer: (value: boolean) => void;
@@ -14,8 +38,10 @@ const AddAssignment: FC<{
   contentType: ResourceContentType;
   showResourceDrawer: boolean;
   onRefresh: () => void;
-  onDeleteResource: (id: number) => void;
+  onDeleteResource: (id: number, isCanceled: boolean) => void;
   setEdit: (value: boolean) => void;
+  lessonType: AssignmentType;
+  messageApi: MessageInstance;
 }> = ({
   setResourceDrawer,
   contentType,
@@ -25,73 +51,201 @@ const AddAssignment: FC<{
   isEdit,
   showResourceDrawer,
   onDeleteResource,
+  lessonType,
+  messageApi,
 }) => {
   const [assignmentForm] = Form.useForm();
-  const [editorValue, setDefaultValue] = useState<string>();
-  const handleAssignment = () => {
+  const [subjectiveForm] = Form.useForm();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [editorValue, setEditorValue] = useState<string>("");
+  const [questions, setQuestions] = useState<MultipleChoiceQA[]>([createEmptyQuestion("1")]);
+  const [current, setCurrent] = useState<number>(0);
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>(lessonType);
+
+  const handleAssignment = async () => {
+    // GRADING PARAMETERS CHECK
+
+    if (assignmentForm.getFieldValue("gradingParameters")?.length) {
+      const questionScores = assignmentForm.getFieldValue("gradingParameters") as QuestionScore[];
+      const sumOfGradingScore = questionScores.reduce(
+        (acc, currentValue) => Number(acc) + Number(currentValue.score),
+        0
+      );
+      if (
+        assignmentType === AssignmentType.SUBJECTIVE &&
+        sumOfGradingScore !== Number(assignmentForm.getFieldsValue().maximumScore)
+      ) {
+        return messageApi.info({ content: "Ensure the sum of grading points equals the maximum points." });
+      }
+    }
+
+    if (!assignmentType) return messageApi.error({ content: "Please select assignment type" });
+    if (
+      assignmentType === AssignmentType.MCQ &&
+      questions.length > 0 &&
+      questions[0].title === "" &&
+      questions[0].options[0].text === "" &&
+      questions[0].options[1].text === ""
+    ) {
+      return messageApi.error({ content: "Please complete the questions" });
+    }
+
+    if (assignmentType === AssignmentType.MCQ) {
+      const indices = findEmptyCorrectOptions(questions);
+      const givenOptionIndeices = findEmptyGivenOptions(questions);
+      if (indices.length > 0) {
+        return messageApi.info({
+          content: `Please select a correct answer key for question ${indices.map((v) => v + 1).join(",")}`,
+        });
+      }
+      if (givenOptionIndeices.length > 0) {
+        return messageApi.info({
+          content: `Please give at least two option to choose the answer in question  ${indices
+            .map((v) => v + 1)
+            .join(",")}`,
+        });
+      }
+    }
+
+    setLoading(true);
+    let progAssignment: IAssignmentDetails;
+
+    // Base object with `_type` for all cases
+    const baseAssignment = { _type: assignmentType };
+
+    switch (assignmentType) {
+      case AssignmentType.MCQ:
+        progAssignment = {
+          ...baseAssignment,
+          questions: cleanEmptyOptions(questions),
+        } as MCQAssignment;
+        break;
+
+      case AssignmentType.SUBJECTIVE: {
+        const { file_for_candidate, archiveUrl: projectArchiveUrl } = subjectiveForm.getFieldsValue();
+        progAssignment = {
+          ...baseAssignment,
+          description: editorValue,
+          file_for_candidate: file_for_candidate,
+          projectArchiveUrl: projectArchiveUrl,
+          gradingParameters: assignmentForm.getFieldValue("gradingParameters"),
+        } as SubjectiveAssignment;
+        break;
+      }
+
+      default:
+        progAssignment = { ...baseAssignment } as IAssignmentDetails;
+        break;
+    }
+
     AssignmentService.createAssignment(
       {
         lessonId: Number(currResId),
-        assignmentFiles: assignmentForm.getFieldsValue().assignmentFiles,
         title: assignmentForm.getFieldsValue().title,
-        content: editorValue,
+        estimatedDurationInMins: assignmentForm.getFieldsValue().estimatedDurationInMins || 30,
+        maximumScore: Number(assignmentForm.getFieldsValue().maximumScore),
+        passingScore: Number(assignmentForm.getFieldsValue().passingScore) || 0,
         isEdit,
-        estimatedDuration: assignmentForm.getFieldsValue().estimatedDuration,
+        details: progAssignment,
       },
       (result) => {
         onClose(false);
-        message.success(result.message);
+        messageApi.success({ content: "Assignment has been saved" });
+        setLoading(false);
       },
       (error) => {
-        message.error(error);
+        setLoading(false);
+        messageApi.error({ content: error });
       }
     );
+    setLoading(false);
   };
 
   useEffect(() => {
+    setQuestions([createEmptyQuestion("1")]);
     if (isEdit) {
       AssignmentService.getAssignment(
         currResId,
-        (result) => {
-          assignmentForm.setFieldValue("title", result.assignmentDetail.name);
-          assignmentForm.setFieldValue("assignmentFiles", result.assignmentDetail.assignmentFiles);
-          assignmentForm.setFieldValue("estimatedDuration", result.assignmentDetail.estimatedDuration);
+        false,
+        (assignmentDetail) => {
+          assignmentForm.setFieldValue("title", assignmentDetail.name);
+          assignmentForm.setFieldValue("estimatedDurationInMins", assignmentDetail.estimatedDurationInMins);
+          assignmentForm.setFieldValue("assignmentType", assignmentDetail.content._type);
+          setAssignmentType(assignmentDetail.content._type);
 
-          setDefaultValue(result.assignmentDetail.content as string);
+          switch (assignmentDetail.content._type) {
+            case AssignmentType.MCQ:
+              const content = assignmentDetail.content as MCQAssignment;
+              setQuestions(content.questions);
+              setCurrent(1);
+              break;
+            case AssignmentType.SUBJECTIVE:
+              const subjectiveContent = assignmentDetail.content as SubjectiveAssignment;
+              subjectiveForm.setFieldValue("file_for_candidate", subjectiveContent.file_for_candidate);
+              assignmentForm.setFieldValue("gradingParameters", subjectiveContent.gradingParameters);
+              subjectiveForm.setFieldValue("archiveUrl", subjectiveContent.projectArchiveUrl);
+              setEditorValue(subjectiveContent.description);
+              setCurrent(1);
+              break;
+            default:
+              break;
+          }
+
+          if (assignmentDetail.maximumScore || assignmentDetail.passingScore) {
+            assignmentForm.setFieldValue("maximumScore", assignmentDetail.maximumScore);
+            assignmentForm.setFieldValue("passingScore", assignmentDetail.passingScore);
+            setCurrent(2);
+          }
         },
         (error) => {}
       );
     }
   }, [currResId, isEdit]);
 
+  useEffect(() => {
+    if (editorValue) {
+      setCurrent(2);
+    }
+    if (
+      questions.length > 0 &&
+      questions[0].title !== "" &&
+      questions[0].options[0].text !== "" &&
+      questions[0].options[1].text !== ""
+    ) {
+      setCurrent(2);
+    }
+  }, [questions, editorValue]);
+
   const onClose = (closeDrawer: boolean) => {
     if (closeDrawer) {
-      currResId && !isEdit && onDeleteResource(currResId);
+      currResId && !isEdit && onDeleteResource(currResId, true);
     }
     setResourceDrawer(false);
     assignmentForm.resetFields();
-
-    setDefaultValue("");
+    subjectiveForm.resetFields();
+    setQuestions([createEmptyQuestion("1")]);
+    setCurrent(0);
+    setEditorValue("");
     onRefresh();
   };
 
   return (
     <Drawer
       classNames={{ header: styles.headerWrapper, body: styles.body, footer: `${styles.footer} add_assignment_footer` }}
-      width={"50vw"}
+      width={"55vw"}
       maskClosable={false}
-      closeIcon={false}
+      closeIcon={true}
+      onClose={() => {
+        setQuestions([createEmptyQuestion("1")]);
+        currResId && !isEdit && onDeleteResource(currResId, true);
+        setResourceDrawer(false);
+        assignmentForm.resetFields();
+        onRefresh();
+      }}
       className={styles.newResDetails}
       title={
         <div className={styles.drawerHeader}>
           <Space className={styles.drawerTitle}>
-            <CloseOutlined
-              onClick={() => {
-                onClose(true);
-
-                setEdit(false);
-              }}
-            />
             {isEdit ? `Update ${contentType} Details` : `New ${contentType} Details`}
           </Space>
         </div>
@@ -100,7 +254,15 @@ const AddAssignment: FC<{
       open={showResourceDrawer}
       footer={
         <Space className={styles.footerBtn}>
-          <Button onClick={() => assignmentForm.submit()} type="primary">
+          <Button
+            loading={loading}
+            onClick={() => {
+              handleAssignment();
+              assignmentForm.submit();
+              subjectiveForm.submit();
+            }}
+            type="primary"
+          >
             {isEdit ? "Update" : "Save Lesson"}
           </Button>
           <Button
@@ -115,43 +277,150 @@ const AddAssignment: FC<{
         </Space>
       }
     >
-      <Form form={assignmentForm} onFinish={handleAssignment} layout="vertical">
-        <Form.Item name="title" label="Title" rules={[{ required: true, message: "Please Enter Title" }]}>
-          <Input placeholder="Add a title" />
-        </Form.Item>
-        <Form.Item
-          name="assignmentFiles"
-          label="Assignment Files"
-          rules={[{ required: true, message: "Please Select files" }]}
-        >
-          <Select mode="tags" placeholder="Add assignment files">
-            {appConstant.assignmentFiles.map((lang, i) => {
-              return (
-                <Select.Option key={i} value={`${lang}`}>
-                  {lang}
-                </Select.Option>
-              );
-            })}
-          </Select>
-        </Form.Item>
+      <Steps
+        current={current}
+        status="finish"
+        size="small"
+        progressDot
+        direction="vertical"
+        className={styles.ant_steps_container}
+        items={[
+          {
+            title: (
+              <ConfigFormLayout formTitle={"Configure Assignment Type"} width="760px">
+                <Form form={assignmentForm} initialValues={{ estimatedDurationInMins: 30 }}>
+                  <ConfigForm
+                    title="Assignment Title"
+                    description="Enter the title of the assignment"
+                    input={
+                      <Form.Item name="title">
+                        <Input placeholder="Enter the title of the assignment" />
+                      </Form.Item>
+                    }
+                  />
 
-        <Form.Item
-          name="estimatedDuration"
-          label="Estimated Duration ( in minutes )"
-          rules={[{ required: true, message: "Please Enter Duration" }]}
-        >
-          <InputNumber type="number" style={{ width: "100%" }} placeholder="Add a estimatd duration" />
-        </Form.Item>
+                  <ConfigForm
+                    title="Estimated Duration"
+                    description="Enter the estimated duration in minutes"
+                    input={
+                      <Form.Item name="estimatedDurationInMins">
+                        <InputNumber placeholder="" defaultValue={30} />
+                      </Form.Item>
+                    }
+                  />
+                </Form>
+              </ConfigFormLayout>
+            ),
+          },
+          {
+            title: (
+              <>
+                {assignmentType === AssignmentType.MCQ && (
+                  <ConfigFormLayout formTitle={"Multiple choice question"} width="760px">
+                    <p>
+                      Provide the list of questions that will be presented to the learners for completing this
+                      assignment
+                    </p>
+                    <MCQForm questions={questions} setQuestions={setQuestions} />
+                  </ConfigFormLayout>
+                )}
 
-        <TextEditor
-          defaultValue={editorValue as string}
-          handleDefaultValue={setDefaultValue}
-          readOnly={false}
-          height={300}
-          theme="snow"
-          placeholder={`Start writing your ${contentType.toLowerCase()}`}
-        />
-      </Form>
+                {assignmentType === AssignmentType.SUBJECTIVE && (
+                  <ConfigFormLayout formTitle={"Subjective"} width="760px">
+                    <p>
+                      Provide the list of questions that will be presented to the learners for completing this
+                      assignment
+                    </p>
+
+                    <SubjectiveAssignmentForm
+                      subjectiveForm={subjectiveForm}
+                      editorValue={editorValue}
+                      setEditorValue={(v) => setEditorValue(v)}
+                    />
+                  </ConfigFormLayout>
+                )}
+              </>
+            ),
+          },
+
+          {
+            title: (
+              <ConfigFormLayout formTitle={"Setup Grading"} width="760px">
+                <Form
+                  form={assignmentForm}
+                  initialValues={{
+                    maximumScore: 5,
+                    passingScore: 80,
+                    gradingParameters: [{ questionIndex: "", score: 0 }],
+                  }}
+                >
+                  <ConfigForm
+                    input={
+                      <Form.Item name="maximumScore">
+                        <Input addonAfter="points" type="number" defaultValue="5" />
+                      </Form.Item>
+                    }
+                    title={"Maximum Scores"}
+                    description={"This is the max score for the assignment, that will be based on multiple parameters "}
+                    divider={false}
+                  />
+
+                  <ConfigForm
+                    input={
+                      <Form.Item name="passingScore">
+                        <Input addonAfter="%" type="number" defaultValue="80" />
+                      </Form.Item>
+                    }
+                    title={"Passing Scores"}
+                    description={"Setup the passing percentage for this assignment"}
+                    divider={false}
+                  />
+                  {assignmentType === AssignmentType.SUBJECTIVE && (
+                    <ConfigForm
+                      input={
+                        <Form.List name="gradingParameters">
+                          {(fields, { add, remove }) => (
+                            <>
+                              {fields.map(({ key, name, ...restField }) => (
+                                <Row key={key} justify="end" gutter={[10, 10]}>
+                                  <Col span={3}>
+                                    <Button type="text" onClick={() => remove(name)} icon={<DeleteFilled />} />
+                                  </Col>
+                                  <Col span={10}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[name, "questionIndex"]}
+                                      rules={[{ required: true, message: "Please enter any question no" }]}
+                                    >
+                                      <Input placeholder="Question 01" />
+                                    </Form.Item>
+                                  </Col>
+                                  <Col span={10}>
+                                    <Form.Item {...restField} name={[name, "score"]} rules={[{ required: true }]}>
+                                      <Input placeholder="points" type="number" addonAfter="points" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                              ))}
+
+                              <Space size={2} onClick={() => add()} style={{ cursor: "pointer", marginLeft: 53 }}>
+                                <PlusOutlined /> <span>Add another parameter</span>
+                              </Space>
+                            </>
+                          )}
+                        </Form.List>
+                      }
+                      title={"Grading Parameters"}
+                      description={"Add additional parameter, based on with total points will be calculated"}
+                      divider={false}
+                    />
+                  )}
+                </Form>
+              </ConfigFormLayout>
+            ),
+          },
+        ]}
+      />
     </Drawer>
   );
 };

@@ -1,3 +1,4 @@
+import { Steps } from "antd";
 import { PageSiteConfig } from "./siteConstant";
 
 const antThemeConfig = (siteConfig: PageSiteConfig) => {
@@ -7,11 +8,20 @@ const antThemeConfig = (siteConfig: PageSiteConfig) => {
       colorText: "#666",
       colorPrimary: `${siteConfig.brand?.brandColor}`,
       colorSplit: "#888",
+      hoverBorderColor: `${siteConfig.brand?.brandColor}`,
+      activeBorderColor: `${siteConfig.brand?.brandColor}`,
       colorTextDisabled: "#666",
+      colorTextDescription: "#666",
+      colorLink: `${siteConfig.brand?.brandColor}`,
     },
     components: {
       Layout: {
         bodyBg: "#f5f5f5",
+      },
+
+      Steps: {
+        colorTextDisabled: "#666",
+        colorSplit: "#d9d9d9",
       },
 
       Badge: {
@@ -27,7 +37,8 @@ const antThemeConfig = (siteConfig: PageSiteConfig) => {
         directoryNodeSelectedColor: "#000",
       },
       Modal: {
-        contentBg: "#f5f5f5",
+        contentBg: "#fff",
+        headerBg: "#fff",
       },
       Menu: {
         itemColor: "#666",
@@ -63,6 +74,9 @@ const antThemeConfig = (siteConfig: PageSiteConfig) => {
         paddingLG: 20,
         colorBorderSecondary: "#d9d9d9",
       },
+      Carousel: {
+        colorBgContainer: `${siteConfig.brand?.brandColor}`,
+      },
       Form: {
         labelColor: "#888",
       },
@@ -79,6 +93,14 @@ const antThemeConfig = (siteConfig: PageSiteConfig) => {
         controlItemBgActive: "#EEE",
         controlItemBgActiveHover: "#dcdcdc",
       },
+      Notification: {
+        colorBgElevated: "#fff",
+      },
+      Tag: {
+        defaultBg: "#eee",
+        defaultColor: "#888",
+      },
+
       Tabs: {
         inkBarColor: "#000",
         itemColor: "#666",
@@ -92,14 +114,14 @@ const antThemeConfig = (siteConfig: PageSiteConfig) => {
         footerPaddingInline: 20,
         footerPaddingBlock: 10,
         paddingLG: 20,
+        colorSplit: "#eee",
       },
       Collapse: {
-        contentPadding: "0px",
         headerBg: "#fff",
-        paddingSM: 0,
       },
       Segmented: {
         itemSelectedBg: "#fff",
+        trackBg: "#e7e7e7",
         controlPaddingHorizontal: 30,
         marginSM: 10,
       },

@@ -5,7 +5,8 @@ import styles from "@/styles/AddCourse.module.scss";
 import { $Enums, ResourceContentType } from "@prisma/client";
 import { IVideoLesson } from "@/types/courses/Course";
 import AddVideoLesson from "./AddVideoLesson";
-import { FormInstance } from "antd";
+import { FormInstance, message } from "antd";
+import { AssignmentType } from "@/types/courses/assignment";
 
 const AddLesson: FC<{
   showResourceDrawer: boolean;
@@ -16,10 +17,11 @@ const AddLesson: FC<{
   contentType: ResourceContentType;
   setCheckVideoState: (value: boolean) => void;
   currResId: number;
-  onDeleteResource: (id: number) => void;
+  onDeleteResource: (id: number, isCanceled: boolean) => void;
   isEdit: boolean;
   setEdit: (value: boolean) => void;
   form: FormInstance;
+  assignmentType: AssignmentType;
 }> = ({
   setResourceDrawer,
   showResourceDrawer,
@@ -33,10 +35,14 @@ const AddLesson: FC<{
   isEdit,
   setEdit,
   form,
+  assignmentType,
 }) => {
+  const [messageApi, contextHolder] = message.useMessage();
+
   return (
     <>
-      {contentType === $Enums.ResourceContentType.Assignment ? (
+      {contextHolder}
+      {contentType === $Enums.ResourceContentType.Assignment && showResourceDrawer && (
         <div className={styles.assignmentDrawerContainer}>
           <AddAssignment
             setResourceDrawer={setResourceDrawer}
@@ -47,9 +53,12 @@ const AddLesson: FC<{
             onRefresh={onRefresh}
             onDeleteResource={onDeleteResource}
             setEdit={setEdit}
+            lessonType={assignmentType}
+            messageApi={messageApi}
           />
         </div>
-      ) : (
+      )}
+      {contentType === $Enums.ResourceContentType.Video && showResourceDrawer && (
         <AddVideoLesson
           onRefresh={onRefresh}
           currResId={currResId}

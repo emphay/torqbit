@@ -1,9 +1,8 @@
-import Layout2 from "@/components/Layouts/Layout2";
 import ConversationService, { IConversationList } from "@/services/ConversationService";
 import { truncateString } from "@/services/helper";
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Button, Divider, Flex, Input, message } from "antd";
-import { NextPage } from "next";
+import { GetServerSidePropsContext, NextPage } from "next";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import styles from "@/styles/Conversation.module.scss";
@@ -11,10 +10,11 @@ import styles from "@/styles/Conversation.module.scss";
 import ConversationCard from "@/components/Conversation/ConversationCard";
 import SvgIcons from "@/components/SvgIcons";
 import { IConversationData } from "../api/v1/conversation/list";
+import { PageSiteConfig } from "@/services/siteConstant";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import AppLayout from "@/components/Layouts/AppLayout";
 
-import { Scrollbars } from "react-custom-scrollbars";
-
-const ConversationPage: NextPage = () => {
+const ConversationPage: NextPage<{ siteConfig: PageSiteConfig }> = ({ siteConfig }) => {
   const { data: user } = useSession();
   const [comment, setComment] = useState<string>("");
   const [allList, setAllList] = useState<IConversationList[]>();
@@ -78,26 +78,25 @@ const ConversationPage: NextPage = () => {
   }, []);
 
   return (
-    <Layout2>
+    <AppLayout siteConfig={siteConfig}>
       <Flex className={styles.conversationPageWrapper}>
         <div>
-          <Scrollbars style={{ height: "calc(100vh - 100px)", width: "calc(920px )" }}>
-            <div className={styles.selectedListWrapper}>
-              {selectedList?.map((list, i) => {
-                return (
-                  <ConversationCard
-                    name={list?.name}
-                    image={list?.image}
-                    comment={list?.comments}
-                    user={String(user?.id)}
-                    commentUser={list?.authorId}
-                    key={i}
-                    contentWidth={"500px"}
-                  />
-                );
-              })}
-            </div>
-          </Scrollbars>
+          <div className={styles.selectedListWrapper}>
+            {selectedList?.map((list, i) => {
+              return (
+                <ConversationCard
+                  name={list?.name}
+                  image={list?.image}
+                  comment={list?.comments}
+                  user={String(user?.id)}
+                  commentUser={list?.authorId}
+                  key={i}
+                  contentWidth={"500px"}
+                />
+              );
+            })}
+          </div>
+
           <Flex align="center" className={styles.commentInputWrapper}>
             {" "}
             <Input.TextArea
@@ -177,7 +176,17 @@ const ConversationPage: NextPage = () => {
             })}
         </div>
       </Flex>
-    </Layout2>
+    </AppLayout>
   );
 };
 export default ConversationPage;
+
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+  const siteConfig = getSiteConfig();
+  const { site } = siteConfig;
+  return {
+    props: {
+      siteConfig: site,
+    },
+  };
+};

@@ -18,21 +18,20 @@ import {
 
 import * as React from "react";
 
-import { useAppContext } from "../ContextApi/AppContext";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
 interface IProps {
   configData: IWelcomeEmailConfig;
 }
 
 const WelcomeEmailPage = ({ configData }: IProps) => {
-  const { globalState } = useAppContext();
-  const siteConfig = globalState.siteConfig;
-
+  const { site }: { site: PageSiteConfig } = getSiteConfig();
   return (
     <Tailwind>
       <Html>
         <Head />
 
-        <Preview>{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`}</Preview>
+        <Preview>{`${site.brand?.name}`}</Preview>
 
         <Head>
           <style></style>
@@ -44,7 +43,7 @@ const WelcomeEmailPage = ({ configData }: IProps) => {
                 height={50}
                 width={50}
                 style={{ display: "unset" }}
-                src={`https://cdn.torqbit.com/static/torq.png`}
+                src={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/${site.brand?.icon}`}
               />
             </Heading>
             <Hr className="border border-solid border-[#eaeaea]  mx-0 w-full" />
@@ -52,9 +51,9 @@ const WelcomeEmailPage = ({ configData }: IProps) => {
             <Section className="px-[20px]">
               <Text className="text-black text-[20px] leading-[20px]">Hey, {configData.name}!</Text>
               <Text className="text-[#888] text-[14px] leading-[20px]">
-                Welcome to the {`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`} Platform. we&apos;re excited to have you
-                join our community. You can now excel in the field of software development, connect with fellow learners
-                and help each other to move forward.
+                Welcome to the {`${site.brand?.name}`} Platform. we&apos;re excited to have you join our community. You
+                can now excel in the field of software development, connect with fellow learners and help each other to
+                move forward.
               </Text>
 
               <Text className="text-[#888] text-[14px] leading-[20px]">
@@ -63,7 +62,7 @@ const WelcomeEmailPage = ({ configData }: IProps) => {
 
               <Button
                 href={configData.url}
-                className={`bg-[${siteConfig.brand?.brandColor}] px-5 py-2 text-white text-left text-[12px]  rounded`}
+                className={`bg-[${site.brand?.brandColor}] px-5 py-2 text-white text-left text-[12px]  rounded`}
               >
                 Visit Dashboard
               </Button>
@@ -75,7 +74,7 @@ const WelcomeEmailPage = ({ configData }: IProps) => {
               <Text className="text-[#000] text-[15px] m-0 ">
                 Thanks & Regards <br />
               </Text>
-              <Text className="text-black text-[15px] my-2">{process.env.NEXT_PUBLIC_PLATFORM_NAME} team</Text>
+              <Text className="text-black text-[15px] my-2">{site.brand?.name} team</Text>
 
               <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
               <Text className="text-[#888] text-[14px] leading-[20px]">

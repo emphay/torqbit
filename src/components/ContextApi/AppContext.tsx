@@ -8,15 +8,16 @@ export type ISiderMenu =
   | "dashboard"
   | "courses"
   | "certifications"
-  | "events-list"
+  | "events"
   | "quiz"
   | "setting"
   | "notification"
+  | "academy"
   | "users"
   | "content"
   | "addCourseForm"
   | "configuration";
-export type IResponsiveNavMenu = "dashboard" | "courses" | "events-list" | "setting" | "notification";
+export type IResponsiveNavMenu = "dashboard" | "courses" | "academy" | "events" | "blogs" | "setting" | "notification";
 
 // Define your state type
 type AppState = {

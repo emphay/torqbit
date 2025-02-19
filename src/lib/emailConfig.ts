@@ -1,3 +1,5 @@
+import { IEmailCredentials } from "@/types/cms/email";
+
 export interface IWelcomeEmailConfig {
   name: string;
   url: string;
@@ -10,6 +12,14 @@ export interface IEnrolmentEmailConfig {
   email: string;
   pdfPath?: string;
   course: { name: string; thumbnail: string };
+}
+
+export interface ILearningEnrollmentEmailConfig {
+  name: string;
+  url: string;
+  email: string;
+  pdfPath?: string;
+  learning: { name: string; thumbnail: string };
 }
 
 export interface IEventEmailConfig {
@@ -88,6 +98,11 @@ export interface IFeedBackConfig {
   feedback: string;
   name: string;
   email: string;
+}
+export interface ITestEmailConfig {
+  name: string;
+  email: string;
+  credendials: IEmailCredentials;
 }
 export interface IEmailResponse {
   success: boolean;

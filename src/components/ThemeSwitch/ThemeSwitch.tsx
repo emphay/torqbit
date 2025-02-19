@@ -1,15 +1,15 @@
 import { Button, Tooltip } from "antd";
 import { FC } from "react";
-import styles from "@/Templates/Standard/components/NavBar/NavBar.module.scss";
+import styles from "@/templates/standard/components/NavBar/NavBar.module.scss";
 import { useAppContext } from "../ContextApi/AppContext";
 
 import SvgIcons from "../SvgIcons";
 import { Theme } from "@/types/theme";
 
-const ThemeSwitch: FC<{ activeTheme: Theme }> = ({ activeTheme }) => {
+const ThemeSwitch: FC<{ activeTheme: Theme; previewMode?: boolean }> = ({ activeTheme, previewMode }) => {
   const { dispatch, globalState } = useAppContext();
   const handleTheme = (theme: Theme) => {
-    localStorage.setItem("theme", theme);
+    !previewMode && localStorage.setItem("theme", theme);
     dispatch({
       type: "SWITCH_THEME",
       payload: theme,
@@ -27,7 +27,11 @@ const ThemeSwitch: FC<{ activeTheme: Theme }> = ({ activeTheme }) => {
           onClick={() => {
             handleTheme(globalState.theme === "dark" ? "light" : "dark");
           }}
-          icon={activeTheme == "dark" ? SvgIcons.sun : SvgIcons.moon}
+          icon={
+            <i style={{ lineHeight: 0, color: "var(--font-secondary)", fontSize: 20 }}>
+              {activeTheme == "dark" ? SvgIcons.sun : SvgIcons.moon}
+            </i>
+          }
         />
       </Tooltip>
     </>

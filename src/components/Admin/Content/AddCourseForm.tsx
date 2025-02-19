@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useState } from "react";
-import Layout2 from "@/components/Layouts/Layout2";
 import Link from "next/link";
 import Setting from "./Setting";
 import styles from "@/styles/Dashboard.module.scss";
@@ -9,14 +8,7 @@ import Curriculum from "./Curriculum";
 import { useRouter } from "next/router";
 import Preview from "./Preview";
 import ProgramService from "@/services/ProgramService";
-import {
-  ChapterDetail,
-  CourseData,
-  CourseLessonAPIResponse,
-  IVideoLesson,
-  VideoAPIResponse,
-  VideoInfo,
-} from "@/types/courses/Course";
+import { CourseData, ICourseDetailView, IVideoLesson, VideoAPIResponse, VideoInfo } from "@/types/courses/Course";
 import AddCourseChapter from "@/components/Admin/Content/AddCourseChapter";
 import { $Enums, ResourceContentType, StateType, VideoState } from "@prisma/client";
 import { ResourceDetails } from "@/lib/types/program";
@@ -24,9 +16,11 @@ import { RcFile } from "antd/es/upload";
 import { postWithFile } from "@/services/request";
 
 import AddLesson from "./AddLesson";
+import { PageSiteConfig } from "@/services/siteConstant";
+import { getBase64 } from "@/lib/utils";
+import { AssignmentType } from "@/types/courses/assignment";
 
-const AddCourseForm: FC = () => {
-  const [courseBannerUploading, setCourseBannerUploading] = useState<boolean>(false);
+const AddCourseForm: FC<{ siteConfig: PageSiteConfig }> = ({ siteConfig }) => {
   const [courseTrailerUploading, setCourseTrailerUploading] = useState<boolean>(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [resourceContentType, setContentType] = useState<ResourceContentType>();
@@ -44,6 +38,7 @@ const AddCourseForm: FC = () => {
   const [videoForm] = Form.useForm();
   const [settingloading, setSettingloading] = useState<boolean>(false);
   const [checkVideoState, setCheckVideoState] = useState<boolean>(false);
+  const [file, setFile] = useState<File>();
 
   const [selectedCourseType, setSelectedCourseType] = useState<{
     free: boolean;
@@ -63,12 +58,13 @@ const AddCourseForm: FC = () => {
   const [showResourceDrawer, setResourceDrawer] = useState<boolean>(false);
   const onRefresh = () => {
     setRefresh(!refresh);
+    setResId(0);
   };
 
   const onChange = (key: string) => {
     if (key === "3") {
       onRefresh();
-      router.replace(`/admin/content/course/${router.query.id}/edit`);
+      router.replace(`/academy/course/${router.query.id}/edit`);
       setActiveKey("3");
     }
     setActiveKey(key);
@@ -81,14 +77,20 @@ const AddCourseForm: FC = () => {
 
   const router = useRouter();
 
+  const [newTrailerThumbnail, setNewTrailerThumbnail] = useState<string>();
+
   const [uploadVideo, setUploadVideo] = useState<VideoInfo>();
-  const [courseThumbnail, setCourseThumbnail] = useState<string>();
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>(AssignmentType.MCQ);
+
+  const [courseDetails, setCourseDetails] = useState<ICourseDetailView>();
 
   const [courseData, setCourseData] = useState<CourseData>({
     name: "",
     description: "",
     expiryInDays: 365,
     chapters: [],
+    currency: "",
+    thumbnail: "",
     courseType: $Enums.CourseType.FREE,
   });
 
@@ -97,7 +99,7 @@ const AddCourseForm: FC = () => {
       Number(router.query.id),
       (result) => {
         messageApi.success(result.message);
-        router.push(`/admin/content`);
+        router.push(`/courses`);
       },
       (error) => {
         messageApi.error(error);
@@ -105,28 +107,64 @@ const AddCourseForm: FC = () => {
     );
   };
 
+  const updateCourseData = () => {
+    ProgramService.getCourseDetails(
+      Number(router.query.id),
+      (result) => {
+        setCourseData({
+          ...courseData,
+          expiryInDays: result.courseDetails.expiryInDays,
+          name: result.courseDetails.name,
+          description: result.courseDetails.description,
+          chapters: result.courseDetails.chapters,
+          difficultyLevel: result.courseDetails.difficultyLevel,
+          state: result?.courseDetails.state,
+          coursePrice: result.courseDetails.coursePrice,
+          thumbnail: result.courseDetails.thumbnail,
+          courseType: result.courseDetails.courseType,
+        });
+      },
+      (err) => {
+        message.error(err);
+      }
+    );
+  };
+
   const onSubmit = () => {
+    let courseName = form.getFieldsValue().course_name || courseData?.name;
+
+    if (!courseName || courseName == "Untitled") {
+      messageApi.error("Course name is missing");
+      return;
+    }
     setSettingloading(true);
 
     let course = {
-      name: form.getFieldsValue().course_name || courseData?.name,
+      name: courseName,
       expiryInDays: Number(courseData?.expiryInDays),
       description: form.getFieldsValue().course_description || courseData.description,
       courseId: Number(router.query.id),
       difficultyLevel: courseData.difficultyLevel,
       certificateTemplate: courseData.certificateTemplate,
       previewMode: form.getFieldsValue().previewMode ? form.getFieldsValue().previewMode : false,
-      courseType: courseData.courseType,
-      coursePrice: courseData.courseType === $Enums.CourseType.FREE ? 0 : Number(courseData.coursePrice),
+      courseType: Number(courseData.coursePrice) == 0 ? $Enums.CourseType.FREE : $Enums.CourseType.PAID,
+      coursePrice: Number(courseData.coursePrice),
+      thumbnail: courseData.thumbnail,
     };
+
+    const courseFormData = new FormData();
+    file && courseFormData.append("file", file);
+    courseFormData.append("course", JSON.stringify(course));
+
     ProgramService.updateCourse(
-      course,
+      courseFormData,
       (result) => {
         setActiveKey("2");
         form.resetFields();
         setRefresh(!refresh);
         setTabActive(true);
-        messageApi.success("Course has been updated");
+        messageApi.success(result.message);
+        setCourseDetails(result.body);
         setSettingloading(false);
       },
       (error) => {
@@ -148,13 +186,14 @@ const AddCourseForm: FC = () => {
     setOpen(value);
   };
 
-  const onDeleteResource = (id: number) => {
+  const onDeleteResource = (id: number, isCanceled: boolean) => {
     ProgramService.deleteResource(
       id,
       Number(router.query.id),
       (result) => {
-        messageApi.success(result.message);
+        !isCanceled && messageApi.success(result.message);
         onRefresh();
+        updateCourseData();
       },
       (error) => {
         messageApi.error(error);
@@ -183,24 +222,29 @@ const AddCourseForm: FC = () => {
     );
   };
 
-  const onAddResource = (chapterId: number, content: ResourceContentType) => {
+  const onAddResource = (chapterId: number, content: ResourceContentType, assignType?: AssignmentType) => {
     setEdit(false);
     ProgramService.createResource(
       {
         chapterId: chapterId,
-        name: "Untitled",
-        description: "Description about the lesson",
+        name: "",
+        description: "",
         contentType: content,
       } as ResourceDetails,
       (result) => {
-        content === $Enums.ResourceContentType.Assignment;
-        videoForm.setFieldValue("name", result.resource.name);
-        videoForm.setFieldValue("description", result.resource.description);
+        if (content == ResourceContentType.Video) {
+          setVideoLesson({ ...videoLesson, chapterId: chapterId, video: undefined });
+        } else if (content == ResourceContentType.Assignment) {
+          setAssignmentType(assignType as AssignmentType);
+        }
+
         setResId(result.resource.resourceId);
         setLoading(false);
         !showResourceDrawer && setResourceDrawer(true);
-        setVideoLesson({ ...videoLesson, chapterId: chapterId, video: undefined });
         setContentType(content);
+
+        //update the state for course detail
+        updateCourseData();
       },
       (error) => {
         messageApi.error(error);
@@ -239,63 +283,33 @@ const AddCourseForm: FC = () => {
         messageApi.error(response.message);
 
         setCourseTrailerUploading(false);
-      }
-      const res = (await postRes.json()) as VideoAPIResponse;
+      } else {
+        const res = (await postRes.json()) as VideoAPIResponse;
 
-      if (res.success) {
-        setUploadVideo({
-          ...uploadVideo,
-          videoId: res.video.videoId,
-          videoUrl: res.video.videoUrl,
-          thumbnail: res.video.thumbnail,
-          previewUrl: res.video.previewUrl,
-          videoDuration: res.video.videoDuration,
-          state: res.video.state,
-          mediaProviderName: res.video.mediaProviderName,
-        });
-        messageApi.success("Course trailer video has been uploaded");
-        setCourseTrailerUploading(false);
-        setCheckVideoState(true);
+        if (res.success) {
+          setUploadVideo({
+            ...uploadVideo,
+            videoId: res.video.videoId,
+            videoUrl: res.video.videoUrl,
+            thumbnail: res.video.thumbnail,
+            previewUrl: res.video.previewUrl,
+            videoDuration: res.video.videoDuration,
+            state: res.video.state,
+            mediaProviderName: res.video.mediaProviderName,
+          });
+          messageApi.success("Course trailer video has been uploaded");
+          setCourseTrailerUploading(false);
+          setCheckVideoState(true);
+        }
       }
     }
   };
 
-  const uploadFile = async (file: any, title: string) => {
+  const uploadTeaserThumbnail = async (file: any) => {
     if (file) {
-      setCourseBannerUploading(true);
-      const name = title.replace(/\s+/g, "-");
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", name);
-      formData.append("dir", "/courses/banners/");
-
-      courseThumbnail && formData.append("existingFilePath", courseThumbnail);
-
-      const postRes = await postWithFile(formData, `/api/v1/upload/file/upload`);
-      if (!postRes.ok) {
-        setLoading(false);
-        throw new Error("Failed to upload file");
-      }
-      const res = await postRes.json();
-
-      if (res.success) {
-        let course = {
-          thumbnail: res.fileCDNPath,
-          courseId: Number(router.query.id),
-        };
-        ProgramService.updateCourse(
-          course,
-          (result) => {
-            setCourseThumbnail(res.fileCDNPath);
-            messageApi.success("file uploaded");
-            setCourseBannerUploading(false);
-          },
-          (error) => {
-            setCourseBannerUploading(false);
-            messageApi.error(error);
-          }
-        );
-      }
+      const base64 = await getBase64(file);
+      setNewTrailerThumbnail(base64 as string);
+      setFile(file);
     }
   };
 
@@ -319,20 +333,35 @@ const AddCourseForm: FC = () => {
     );
   };
 
-  const onPublishCourse = (state: string) => {
-    if (
-      courseData.chapters.length > 0 &&
-      courseData.chapters[0].resource.filter((r) => r.state === StateType.ACTIVE).length >= 2
-    ) {
+  const onPublishCourse = (state: StateType) => {
+    const courseActiveLessons = courseData.chapters
+      .flatMap((c) => c.resource)
+      .filter((lesson) => lesson.state == StateType.ACTIVE);
+
+    if (state == StateType.DRAFT) {
       ProgramService.updateCourseState(
         Number(router.query.id),
         state,
         (result) => {
-          router.push("/courses");
+          message.success(`Your course has been saved as draft`);
         },
-        (error) => {}
+        (error) => {
+          message.error(error);
+        }
       );
-    } else {
+    } else if (courseActiveLessons && state == StateType.ACTIVE && courseActiveLessons.length >= 2) {
+      ProgramService.updateCourseState(
+        Number(router.query.id),
+        state,
+        (result) => {
+          message.success(`Your course has been successfully published.`);
+          router.push(`/courses/${result.course.slug}`);
+        },
+        (error) => {
+          message.error(error);
+        }
+      );
+    } else if (courseActiveLessons && state == StateType.ACTIVE && courseActiveLessons.length < 2) {
       message.error("Minimum two published lessons are required to publish the course");
     }
   };
@@ -349,14 +378,11 @@ const AddCourseForm: FC = () => {
           onDiscard={onDiscard}
           courseData={courseData}
           onUploadTrailer={onUploadTrailer}
-          uploadFile={uploadFile}
+          uploadTeaserThumbnail={uploadTeaserThumbnail}
           uploadVideo={uploadVideo}
-          courseBannerUploading={courseBannerUploading}
           courseTrailerUploading={courseTrailerUploading}
-          courseBanner={courseThumbnail}
+          trailerThumbnail={newTrailerThumbnail}
           settingLoading={settingloading}
-          selectedCourseType={selectedCourseType}
-          selectCourseType={selectCourseType}
         />
       ),
     },
@@ -367,11 +393,12 @@ const AddCourseForm: FC = () => {
           Curriculum
         </span>
       ),
-      disabled: (!courseThumbnail && !uploadVideo?.videoUrl) || !tabActive,
+      disabled: !uploadVideo?.videoUrl || !tabActive,
 
-      children: courseThumbnail && uploadVideo?.videoUrl && (
+      children: uploadVideo?.videoUrl && (
         <Curriculum
           chapters={courseData.chapters}
+          siteConfig={siteConfig}
           onRefresh={onRefresh}
           handleNewChapter={handleNewChapter}
           onAddResource={onAddResource}
@@ -389,52 +416,31 @@ const AddCourseForm: FC = () => {
       label: (
         <span onClick={() => !tabActive && message.error("First fill and  save  the add course form ")}>Preview</span>
       ),
-      disabled: (!courseThumbnail && !uploadVideo?.videoUrl) || !tabActive,
-      children: courseThumbnail && uploadVideo?.videoUrl && (
+      disabled: !uploadVideo?.videoUrl || !tabActive,
+      children: uploadVideo?.videoUrl && courseDetails && (
         <Preview
-          videoUrl={uploadVideo?.videoUrl}
-          onEnrollCourse={() => {}}
-          courseDetail={
-            {
-              course: {
-                name: courseData.name,
-                description: courseData.description,
-                courseTrailer: uploadVideo.videoUrl,
-              },
-              lessons: courseData.chapters.map((c: ChapterDetail) => {
-                return {
-                  chapterSeq: c.sequenceId,
-                  chapterName: c.name,
-                  lessons: c.resource.map((r) => {
-                    if (r.video) {
-                      return {
-                        videoId: r.video.id,
-                        lessonId: r.resourceId,
-                        videoUrl: r.video.videoUrl,
-                        videoDuration: r.video.videoDuration,
-                        isWatched: false,
-                        title: r.name,
-                        contentType: r.contentType,
-                      };
-                    } else if (r.assignment) {
-                      return {
-                        lessonId: r.resourceId,
-                        isWatched: false,
-                        title: r.name,
-                        contentType: r.contentType,
-                        videoDuration: r.assignment.estimatedDuration ? r.assignment.estimatedDuration * 60 : 0,
-                      };
-                    }
-                  }),
-                };
-              }),
-            } as CourseLessonAPIResponse
-          }
-          addContentPreview={true}
+          courseDetail={courseDetails}
+          previewMode={true}
+          handlePurchase={() => {}}
+          handleLessonRedirection={() => {}}
         />
       ),
     },
   ];
+
+  const updateCourseDetailedView = () => {
+    ProgramService.fetchCourseDetailedView(
+      Number(router.query.id),
+      (result) => {
+        setCourseDetails(result.body);
+      },
+      (err) => message.error(err)
+    );
+  };
+
+  useEffect(() => {
+    updateCourseDetailedView();
+  }, [activeKey]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timer | undefined;
@@ -496,8 +502,8 @@ const AddCourseForm: FC = () => {
           form.setFieldValue("course_difficulty", result.courseDetails.difficultyLevel);
           form.setFieldValue("certificate_template", result.courseDetails.certificateTemplate);
           form.setFieldValue("previewMode", result.courseDetails.previewMode);
-
-          if (result.courseDetails.chapters.length > 0 || result.courseDetails.videoUrl) {
+          form.setFieldValue("coursePrice", result.courseDetails.coursePrice);
+          if (result.courseDetails.chapters.length > 0 || result.courseDetails.tvUrl) {
             setTabActive(true);
           }
           selectCourseType(result.courseDetails.courseType as $Enums.CourseType);
@@ -510,11 +516,11 @@ const AddCourseForm: FC = () => {
             difficultyLevel: result.courseDetails.difficultyLevel,
             state: result?.courseDetails.state,
             coursePrice: result.courseDetails.coursePrice,
-
+            currency: result.currency,
+            thumbnail: result.courseDetails.thumbnail,
             courseType: result.courseDetails.courseType,
           });
 
-          setCourseThumbnail(result.courseDetails.thumbnail);
           setSettingloading(false);
         },
         (error) => {
@@ -523,20 +529,19 @@ const AddCourseForm: FC = () => {
         }
       );
   }, [router.query.id, refresh]);
-
   return (
-    <Layout2>
+    <>
       {contextHolder}
       <section className={styles.add_course_page}>
         <div className={styles.add_course_header}>
           <div className={styles.left_icon}>
-            <Link href="/admin/content">{SvgIcons.xMark}</Link>
+            <Link href="/academy">{SvgIcons.xMark}</Link>
             <Divider type="vertical" style={{ height: "1.2rem" }} />
             <h4>Edit Course</h4>
           </div>
           <div>
             <Dropdown.Button
-              type="primary"
+              type="default"
               onClick={() => {
                 courseData.state === StateType.DRAFT
                   ? onPublishCourse(StateType.ACTIVE)
@@ -549,7 +554,7 @@ const AddCourseForm: FC = () => {
                     key: 1,
                     label: courseData.state === StateType.DRAFT ? "Save and exit" : "Publish Course",
                     onClick: () => {
-                      router.push("/admin/content");
+                      router.push("/academy");
                     },
                   },
                 ],
@@ -559,13 +564,9 @@ const AddCourseForm: FC = () => {
             </Dropdown.Button>
           </div>
         </div>
-        <Tabs
-          tabBarGutter={40}
-          activeKey={activeKey}
-          className={styles.add_course_tabs}
-          items={items}
-          onChange={onChange}
-        />
+        <div className={styles.add_course_tabs}>
+          <Tabs tabBarGutter={40} activeKey={activeKey} items={items} onChange={onChange} />
+        </div>
       </section>
       <AddCourseChapter
         courseId={Number(router.query.id)}
@@ -581,7 +582,7 @@ const AddCourseForm: FC = () => {
         setEdit={setChapterEdit}
       />
 
-      {currResId && (
+      {typeof currResId !== "undefined" && (
         <AddLesson
           showResourceDrawer={showResourceDrawer}
           setVideoLesson={setVideoLesson}
@@ -595,9 +596,10 @@ const AddCourseForm: FC = () => {
           isEdit={isEdit}
           setCheckVideoState={setCheckVideoState}
           setEdit={setEdit}
+          assignmentType={assignmentType}
         />
       )}
-    </Layout2>
+    </>
   );
 };
 

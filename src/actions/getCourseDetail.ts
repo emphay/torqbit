@@ -1,6 +1,8 @@
 import { ICoursePreviewDetail } from "@/types/courses/Course";
-import { $Enums, CourseState, Role } from "@prisma/client";
+import { $Enums, CourseState, orderStatus, Role } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { resolve } from "path";
+import { learningCourseDetailForStudent } from "./getLearningCourseDetail";
 
 export const extractLessonAndChapterDetail = (
   courseDetail: ICoursePreviewDetail[],
@@ -18,7 +20,6 @@ export const extractLessonAndChapterDetail = (
     courseType: courseDetail[0]?.courseType,
     coursePrice: courseDetail[0]?.coursePrice,
     userRole: userRole,
-    thumbnail: courseDetail[0]?.thumbnail,
     difficultyLevel: courseDetail[0]?.difficultyLevel,
     courseState: courseDetail[0]?.courseState,
     authorImage: courseDetail[0]?.authorImage,
@@ -71,29 +72,61 @@ const courseDetailForStudent = async (
   userRole: Role;
   userStatus?: CourseState;
 }> => {
-  const isCourseRegistered = await prisma.courseRegistration.findUnique({
+  const findLearningPathCourse = await prisma.learningPathCourses.findFirst({
     where: {
-      studentId_courseId: {
-        studentId: userId,
-        courseId: courseId,
-      },
+      courseId: courseId,
     },
     select: {
-      courseState: true,
+      courseId: true,
+      learningPathId: true,
+      path: {
+        select: {
+          authorId: true,
+        },
+      },
     },
   });
 
-  return new Promise(async (resolve, reject) => {
-    if (isCourseRegistered) {
-      if (isCourseRegistered.courseState === CourseState.COMPLETED) {
-        const resultRows = await prisma.$queryRaw<
-          ICoursePreviewDetail[]
-        >`SELECT  ch.sequenceId as chapterSeq, re.sequenceId as resourceSeq, re.resourceId, re.name as lessonName, 
+  const isLearningRegistered =
+    findLearningPathCourse &&
+    (await prisma.order.findFirst({
+      where: {
+        studentId: userId,
+        productId: findLearningPathCourse.learningPathId,
+        orderStatus: orderStatus.SUCCESS,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }));
+
+  if (isLearningRegistered) {
+    return await learningCourseDetailForStudent(courseId, userId);
+  } else {
+    const isCourseRegistered = await prisma.courseRegistration.findFirst({
+      where: {
+        studentId: userId,
+        order: {
+          productId: courseId,
+        },
+      },
+      select: {
+        courseState: true,
+      },
+    });
+
+    return new Promise(async (resolve, reject) => {
+      if (isCourseRegistered) {
+        if (isCourseRegistered.courseState === CourseState.COMPLETED) {
+          const resultRows = await prisma.$queryRaw<
+            ICoursePreviewDetail[]
+          >`SELECT  ch.sequenceId as chapterSeq, re.sequenceId as resourceSeq, re.resourceId, re.name as lessonName,
         co.name as courseName, co.description, co.tvUrl,co.tvThumbnail as videoThumbnail,co.previewMode,co.courseType,co.coursePrice,re.contentType as contentType,co.state as courseState,co.totalResources as totalLessons,
-        co.thumbnail as thumbnail,co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
-        vi.videoDuration, ch.chapterId, 
-        ch.name as chapterName, cp.resourceId as watchedRes FROM Course as co 
-        INNER JOIN CourseRegistration as cr ON co.courseId = cr.courseId
+        co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
+        vi.videoDuration, ch.chapterId,
+        ch.name as chapterName, cp.resourceId as watchedRes FROM Course as co
+        INNER JOIN \`Order\` as ord ON ord.productId = co.courseId
+        INNER JOIN CourseRegistration as cr ON  cr.orderId = ord.id
         INNER JOIN Chapter as ch ON co.courseId = ch.courseId
         INNER JOIN Resource as re ON ch.chapterId = re.chapterId
         LEFT OUTER JOIN Video as vi ON re.resourceId = vi.resourceId
@@ -103,20 +136,21 @@ const courseDetailForStudent = async (
         WHERE cr.studentId = ${userId}
         AND co.courseId = ${courseId} AND ch.state = ${$Enums.StateType.ACTIVE} AND re.state = ${$Enums.StateType.ACTIVE}
         ORDER BY chapterSeq, resourceSeq`;
-        resolve({
-          courseDetail: resultRows,
-          userRole: Role.STUDENT,
-          userStatus: CourseState.COMPLETED,
-        });
-      } else {
-        const resultRows = await prisma.$queryRaw<
-          ICoursePreviewDetail[]
-        >`SELECT  ch.sequenceId as chapterSeq, re.sequenceId as resourceSeq, re.resourceId, re.name as lessonName, 
+          resolve({
+            courseDetail: resultRows,
+            userRole: Role.STUDENT,
+            userStatus: CourseState.COMPLETED,
+          });
+        } else {
+          const resultRows = await prisma.$queryRaw<
+            ICoursePreviewDetail[]
+          >`SELECT  ch.sequenceId as chapterSeq, re.sequenceId as resourceSeq, re.resourceId, re.name as lessonName,
         co.name as courseName, co.description, co.tvUrl,co.tvThumbnail as videoThumbnail,co.previewMode,co.courseType,co.coursePrice,re.contentType as contentType,co.state as courseState,co.totalResources as totalLessons,
-        co.thumbnail as thumbnail,co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
-         vi.videoDuration, ch.chapterId, 
-        ch.name as chapterName, cp.resourceId as watchedRes FROM Course as co 
-        INNER JOIN CourseRegistration as cr ON co.courseId = cr.courseId
+        co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
+         vi.videoDuration, ch.chapterId,
+        ch.name as chapterName, cp.resourceId as watchedRes FROM Course as co
+        INNER JOIN \`Order\` as ord ON ord.productId = co.courseId
+        INNER JOIN CourseRegistration as cr ON   cr.orderId = ord.id
         INNER JOIN Chapter as ch ON co.courseId = ch.courseId
         INNER JOIN Resource as re ON ch.chapterId = re.chapterId
         INNER JOIN User as u ON u.id = co.authorId
@@ -126,12 +160,14 @@ const courseDetailForStudent = async (
         WHERE cr.studentId = ${userId}
         AND co.courseId = ${courseId} AND ch.state = ${$Enums.StateType.ACTIVE} AND re.state = ${$Enums.StateType.ACTIVE}
         ORDER BY chapterSeq, resourceSeq`;
-        resolve({ courseDetail: resultRows, userRole: Role.STUDENT });
+          resolve({ courseDetail: resultRows, userRole: Role.STUDENT });
+        }
+      } else {
+        resolve(courseDetail(courseId, Role.NOT_ENROLLED));
       }
-    } else {
-      resolve(courseDetail(courseId, Role.NOT_ENROLLED));
-    }
-  });
+    });
+    return await courseDetail(courseId, Role.NOT_ENROLLED);
+  }
 };
 const courseDetail = async (
   courseId: number,
@@ -146,7 +182,7 @@ const courseDetail = async (
       ICoursePreviewDetail[]
     >`SELECT  ch.sequenceId as chapterSeq, re.sequenceId as resourceSeq, re.resourceId, re.name as lessonName, 
     co.name as courseName, co.description, co.tvUrl,co.tvThumbnail as videoThumbnail,co.previewMode,co.courseType,co.coursePrice,re.contentType as contentType,co.state as courseState,co.totalResources as totalLessons,
-    co.thumbnail as thumbnail,co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
+    co.difficultyLevel,u.name as authorName,u.image as authorImage,assign.estimatedDuration,
     vi.videoDuration, ch.chapterId, 
     ch.name as chapterName, NULL as watchedRes FROM Course as co 
     INNER JOIN User as u ON u.id = co.authorId

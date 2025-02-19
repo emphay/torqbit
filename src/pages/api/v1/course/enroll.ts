@@ -6,14 +6,13 @@ import { withMethods } from "@/lib/api-middlewares/with-method";
 import * as z from "zod";
 import { errorHandler } from "@/lib/api-middlewares/errorHandler";
 import { getToken } from "next-auth/jwt";
-import { addDays, getCookieName } from "@/lib/utils";
-import MailerService from "@/services/MailerService";
-import { $Enums } from "@prisma/client";
-import { PaymentManagemetService } from "@/services/payment/PaymentManagementService";
-import { CashFreeConfig, CoursePaymentConfig, UserConfig } from "@/types/payment";
+import { getCookieName } from "@/lib/utils";
+import enrollmentService from "@/actions/enrollmentService";
+import { APIResponse } from "@/types/apis";
 
 export const validateReqBody = z.object({
   courseId: z.number(),
+  orderId: z.string().optional(),
 });
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -27,126 +26,26 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     const body = await req.body;
-
-    const { courseId } = body;
-
+    const reqBody = validateReqBody.parse(body);
     // check is user Active
 
     if (!token || !token.isActive) {
-      return res.status(400).json({
-        success: false,
-        error: " You don't have an active user",
-      });
+      return res.status(400).json(new APIResponse(false, 400, " You are not  an active user"));
     }
+
+    let studentInfo = {
+      studentId: token.id,
+      email: String(token.email),
+      name: String(token.name),
+      phone: token.phone,
+    };
+
+    const enrollCourse = await enrollmentService.courseEnrollment(studentInfo, reqBody.courseId);
+    return res.status(enrollCourse.status).json(enrollCourse);
 
     // check user already enrolled
-
-    const alreadyEnrolled = await prisma.courseRegistration.findUnique({
-      where: {
-        studentId_courseId: {
-          courseId: Number(courseId),
-          studentId: String(token?.id),
-        },
-      },
-      select: {
-        registrationId: true,
-      },
-    });
-
-    if (alreadyEnrolled) {
-      return res.status(400).json({
-        success: false,
-        alreadyEnrolled: true,
-        error: "You have already enrolled in this course",
-      });
-    }
-
-    const course = await prisma.course.findUnique({
-      where: {
-        courseId: courseId,
-      },
-      select: {
-        courseType: true,
-        thumbnail: true,
-        name: true,
-        expiryInDays: true,
-        coursePrice: true,
-      },
-    });
-    let courseType = course?.courseType;
-
-    if (course) {
-      const expiryDate = addDays(Number(course.expiryInDays));
-      // IF COURSE IS FREE
-
-      if (courseType === $Enums.CourseType.FREE) {
-        await prisma.courseRegistration.create({
-          data: {
-            studentId: token.id,
-            courseId: courseId,
-            expireIn: expiryDate,
-            courseState: $Enums.CourseState.ENROLLED,
-          },
-        });
-
-        const configData = {
-          name: token.name,
-          email: token.email,
-
-          url: `${process.env.NEXTAUTH_URL}/courses/${courseId}`,
-          course: {
-            name: course.name,
-            thumbnail: course.thumbnail,
-          },
-        };
-
-        MailerService.sendMail("COURSE_ENROLMENT", configData).then((result) => {
-          console.log(result.error);
-        });
-
-        return res.status(200).json({
-          success: true,
-          message: "Congratulations! You’ve successfully enrolled in this course.",
-        });
-      }
-
-      // IF COURSE IS PAID
-
-      if (courseType === $Enums.CourseType.PAID) {
-        if (!token.phone) {
-          return res.status(400).json({ success: false, error: "Missing phone number", phoneNotFound: true });
-        } else if (token.phone.length > 10 || token.phone.length < 10) {
-          return res
-            .status(400)
-            .json({ success: false, error: "Phone number must be of 10 digits !", phoneNotFound: true });
-        } else {
-          const userConfig: UserConfig = {
-            studentId: String(token.id),
-            email: String(token.email),
-            studentName: String(token.name),
-            phone: token.phone,
-          };
-
-          const courseConfig: CoursePaymentConfig = {
-            courseId: Number(courseId),
-            amount: Number(course.coursePrice),
-            coursePrice: Number(course.coursePrice),
-          };
-
-          const gatewayConfig: CashFreeConfig = {
-            name: String(process.env.GATEWAY_PROVIDER_NAME),
-            clientId: String(process.env.CASHFREE_CLIENT_ID),
-            secretId: String(process.env.CASHFREE_SECRET_KEY),
-          };
-          const pms = new PaymentManagemetService();
-
-          const paymentData = await pms.processPayment(userConfig, courseConfig, gatewayConfig);
-
-          return res.status(paymentData.success ? 200 : 400).json(paymentData);
-        }
-      }
-    }
   } catch (error: any) {
+    console.log(error);
     return errorHandler(error, res);
   }
 };

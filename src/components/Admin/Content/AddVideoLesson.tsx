@@ -11,6 +11,7 @@ import { postWithFile } from "@/services/request";
 import { getChunkPercentage } from "@/lib/utils";
 import ImgCrop from "antd-img-crop";
 import appConstant from "@/services/appConstant";
+import ConfigFormItem from "@/components/Configuration/ConfigForm";
 
 const AddVideoLesson: FC<{
   isEdit: boolean;
@@ -19,7 +20,7 @@ const AddVideoLesson: FC<{
   onRefresh: () => void;
   setResourceDrawer: (value: boolean) => void;
   showResourceDrawer: boolean;
-  onDeleteResource: (id: number) => void;
+  onDeleteResource: (id: number, isCanceled: boolean) => void;
   contentType?: $Enums.ResourceContentType;
   currResId?: number;
   setEdit: (value: boolean) => void;
@@ -46,7 +47,8 @@ const AddVideoLesson: FC<{
 
   const [checkLessonVideoState, setCheckLessonVideoState] = useState<boolean>();
   const [uploadedChunkPercentage, setUplaodedChunksPercentage] = useState<number>(0);
-  const onUploadVideo = async (file: RcFile, title: string, resourceId: number) => {
+  const onUploadVideo = async (file: RcFile, resourceId: number) => {
+    let title = `${resourceId}-${new Date().getTime()}`;
     setResourceVideoUploading(true);
     const chunkSize = 2 * 1024 * 1024;
     const totalChunks = Math.ceil(file.size / chunkSize);
@@ -131,7 +133,10 @@ const AddVideoLesson: FC<{
         form.resetFields();
         setLoading(false);
         form.setFieldValue("contentType", "Video");
-        setResourceDrawer(false);
+        setTimeout(() => {
+          setResourceDrawer(false);
+        }, 300);
+
         onRefresh();
         if (isEdit) {
           setEdit(true);
@@ -186,7 +191,9 @@ const AddVideoLesson: FC<{
     if (intervalId && videoLesson && videoLesson.video && videoLesson.video.state == VideoState.READY) {
       clearInterval(Number(intervalId));
     }
-    return () => intervalId && clearInterval(Number(intervalId));
+    return () => {
+      intervalId && clearInterval(Number(intervalId));
+    };
   }, [checkLessonVideoState]);
 
   const uploadFile = async (file: any, title: string) => {
@@ -207,8 +214,7 @@ const AddVideoLesson: FC<{
       const postRes = await postWithFile(formData, `/api/v1/upload/file/upload`);
       if (!postRes.ok) {
         setThumbnailUploading(false);
-
-        throw new Error("Failed to upload file");
+        messageApi.error(`Failed to upload the thumbnail`);
       }
       const res = await postRes.json();
 
@@ -232,31 +238,28 @@ const AddVideoLesson: FC<{
   return (
     <>
       {contextHolder}
+
       <Drawer
         classNames={{ header: styles.headerWrapper, body: styles.body, footer: styles.footer }}
         width={400}
         maskClosable={false}
-        closeIcon={false}
+        closeIcon={true}
+        onClose={() => {
+          if (resourceVideoUploading) {
+            message.info(`Wait for the video to completely upload`);
+          } else {
+            currResId && !isEdit && onDeleteResource(currResId, true);
+            setResourceDrawer(false);
+            form.resetFields();
+            onRefresh();
+          }
+        }}
         className={styles.newResDetails}
-        title={
-          <div className={styles.drawerHeader}>
-            <Space className={styles.drawerTitle}>
-              <CloseOutlined
-                onClick={() => {
-                  currResId && !isEdit && onDeleteResource(currResId);
-                  setResourceDrawer(false);
-                  form.resetFields();
-                  onRefresh();
-                }}
-              />
-              {isEdit ? `Update ${contentType} Details` : `New ${contentType} Details`}
-            </Space>
-          </div>
-        }
+        title={isEdit ? `Update ${contentType} Details` : `New ${contentType} Details`}
         placement="right"
         open={showResourceDrawer}
         footer={
-          <Space className={styles.footerBtn}>
+          <Space>
             <Button
               loading={loading}
               type="primary"
@@ -272,10 +275,13 @@ const AddVideoLesson: FC<{
               type="default"
               loading={loading}
               onClick={() => {
-                setResourceDrawer(false);
-                currResId && !isEdit && onDeleteResource(currResId);
-
-                form.resetFields();
+                if (resourceVideoUploading) {
+                  message.info(`Wait for the video to completely upload`);
+                } else {
+                  setResourceDrawer(false);
+                  currResId && !isEdit && onDeleteResource(currResId, true);
+                  form.resetFields();
+                }
               }}
             >
               Cancel
@@ -292,39 +298,52 @@ const AddVideoLesson: FC<{
             }}
           >
             <div className={styles.formCourseName}>
-              <Form.Item label="Title" name="name" rules={[{ required: true, message: "Please Enter Title" }]}>
-                <Input
-                  onChange={(e) => {
-                    setVideoLesson({ ...videoLesson, title: e.currentTarget.value });
-                  }}
-                  value={form.getFieldsValue().name}
-                  placeholder="Set the title of the resource"
-                />
-              </Form.Item>
-              <div>
-                <div>
+              <ConfigFormItem
+                layout="vertical"
+                input={
+                  <Form.Item name="name" rules={[{ required: true, message: "Video title is required" }]}>
+                    <Input
+                      onChange={(e) => {
+                        setVideoLesson({ ...videoLesson, title: e.currentTarget.value });
+                      }}
+                      value={form.getFieldsValue().name}
+                      placeholder="Set the title of the video"
+                    />
+                  </Form.Item>
+                }
+                title={"Title"}
+                description={"Provide the title of the video"}
+                divider={true}
+              />
+
+              <ConfigFormItem
+                layout="vertical"
+                input={
                   <Form.Item
-                    name="description"
-                    label="Description"
-                    rules={[{ required: true, message: "Please Enter Description" }]}
+                    name={"description"}
+                    rules={[{ required: true, message: "Description about the video lesson required" }]}
                   >
                     <Input.TextArea
                       onChange={(e) => {
                         setVideoLesson({ ...videoLesson, description: e.currentTarget.value });
                       }}
                       rows={4}
-                      placeholder="Brief description about the resource"
+                      value={form.getFieldsValue().description}
+                      placeholder="Brief description about the video"
                     />
                   </Form.Item>
-                </div>
-              </div>
+                }
+                title={"Description"}
+                description={"Provide a brief description about the video"}
+                divider={true}
+              />
 
               <div>
                 <div style={{ position: "relative" }}>
                   <Form.Item
                     name="videoUrl"
                     label="Upload Video"
-                    rules={[{ required: true, message: "Please Enter Description" }]}
+                    rules={[{ required: true, message: "Please upload video" }]}
                   >
                     <Upload
                       name="avatar"
@@ -337,7 +356,7 @@ const AddVideoLesson: FC<{
                       className={"resource_video_uploader"}
                       showUploadList={false}
                       beforeUpload={(file) => {
-                        currResId && onUploadVideo(file, form.getFieldsValue().name, currResId);
+                        currResId && onUploadVideo(file, currResId);
                       }}
                     >
                       {videoLesson?.video?.state == VideoState.READY && !resourceVideoUploading && (
@@ -385,6 +404,7 @@ const AddVideoLesson: FC<{
                   {!resourceVideoUploading && (
                     <div className={styles.actionDropdown}>
                       <ImgCrop
+                        fillColor={"transparent"}
                         rotationSlider
                         aspect={16 / 8}
                         onModalOk={(file) => {

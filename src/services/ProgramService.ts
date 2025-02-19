@@ -1,7 +1,18 @@
 import { IRegisteredCourses, IResourceDetail, VideoDetails } from "@/lib/types/learn";
 import { ICourseDetial, ResourceDetails } from "@/lib/types/program";
-import { ChapterDetail, CourseAPIResponse, CourseInfo, CourseLessonAPIResponse } from "@/types/courses/Course";
+import {
+  ChapterDetail,
+  CourseAPIResponse,
+  CourseInfo,
+  CourseLessonAPIResponse,
+  ICourseDetailView,
+  ICourseListItem,
+  IEnrolledListResponse,
+  IRegisteredCoursesList,
+} from "@/types/courses/Course";
 import { Chapter, Course, CourseCertificates, Resource } from "@prisma/client";
+import { getFetch, postWithFile } from "./request";
+import { APIResponse } from "@/types/apis";
 
 export interface ICourseList extends Course {
   courseId: number;
@@ -17,6 +28,7 @@ export type ApiResponse = {
   registerCourses: IRegisteredCourses[];
   courseDetails: CourseInfo;
   certificateId: string;
+  fileCDNPath: string;
   certificateDetail: {
     imgPath: string;
     pdfPath: string;
@@ -31,11 +43,7 @@ export type ApiResponse = {
     completed: boolean;
     certificateIssueId: string;
   };
-  progress: {
-    courseName: string;
-    progress: string;
-    courseId: number;
-  }[];
+  progress: IRegisteredCoursesList[];
   newChapter: {
     ChapterId: number;
   };
@@ -127,37 +135,6 @@ class ProgramService {
     });
   };
 
-  createCourses = (
-    courses: ICourseList[],
-    programId: number,
-    onSuccess: (response: ApiResponse) => void,
-    onFailure: (message: string) => void
-  ) => {
-    fetch(`/api/v1/course/add`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        courses: courses,
-        programId: programId,
-      }),
-    }).then((result) => {
-      if (result.status == 400) {
-        result.json().then((r) => {
-          const failedResponse = r as FailedApiResponse;
-          onFailure(failedResponse.error);
-        });
-      } else if (result.status == 200) {
-        result.json().then((r) => {
-          const apiResponse = r as ApiResponse;
-          onSuccess(apiResponse);
-        });
-      }
-    });
-  };
-
   getCourseLessons = (
     courseId: number,
     onSuccess: (response: CourseLessonAPIResponse) => void,
@@ -236,6 +213,30 @@ class ProgramService {
     });
   };
 
+  fetchCourseDetailedView = (
+    courseId: number,
+    handleResponse: (response: APIResponse<ICourseDetailView>) => void,
+    onFailure: (message: string) => void
+  ) => {
+    fetch(`/api/v1/course/${courseId}/detailed-view`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    }).then((result) => {
+      if (result.ok) {
+        result.json().then((r) => {
+          handleResponse(r as APIResponse<ICourseDetailView>);
+        });
+      } else {
+        result.json().then((r) => {
+          onFailure((r as APIResponse<ICourseDetailView>).message);
+        });
+      }
+    });
+  };
+
   getAllCourse = (
     programId: number,
     state: string,
@@ -284,7 +285,22 @@ class ProgramService {
     });
   };
 
-  getCoursesByAuthor = (
+  listCoursesViews = (handleResponse: (response: APIResponse<ICourseListItem[]>) => void) => {
+    fetch(`/api/v1/course/list/views`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    }).then((result) => {
+      result.json().then((r) => {
+        const response = r as APIResponse<ICourseListItem[]>;
+        handleResponse(response);
+      });
+    });
+  };
+
+  getCourseList = (
     courseListPreview: boolean,
     onSuccess: (response: ApiResponse) => void,
     onFailure: (message: string) => void
@@ -308,6 +324,22 @@ class ProgramService {
         });
       }
     });
+  };
+
+  getEnrolledList = (
+    courseId: number,
+    limit: number,
+    offSet: number,
+    onSuccess: (response: APIResponse<{ list: IEnrolledListResponse[]; total: number }>) => void
+  ) => {
+    getFetch(`/api/v1/admin/course/enrolledList?courseId=${courseId}&limit=${limit}&offSet=${offSet}`).then(
+      (result) => {
+        result.json().then((r) => {
+          const apiResponse = r as APIResponse<{ list: IEnrolledListResponse[]; total: number }>;
+          onSuccess(apiResponse);
+        });
+      }
+    );
   };
 
   getRegisterCourses = (onSuccess: (response: ApiResponse) => void, onFailure: (message: string) => void) => {
@@ -443,45 +475,40 @@ class ProgramService {
   };
 
   updateCourse = (
-    courseData: {
-      name?: string;
-      duration?: number;
-      state?: string | undefined;
-      skills?: string[];
-      description?: string;
-      thumbnail?: string;
-      thumbnailId?: string;
-      videoUrl?: string;
-      expiryInDays?: number;
-      videoId?: string;
-      programId?: number;
-      authorId?: string | undefined;
-      sequenceId?: number | undefined;
-      courseId: number;
-      difficultyLevel?: string;
-      certificateTemplate?: string;
-    },
-
-    onSuccess: (response: ApiResponse) => void,
+    formData: FormData,
+    onSuccess: (response: APIResponse<ICourseDetailView>) => void,
     onFailure: (message: string) => void
   ) => {
-    fetch(`/api/v1/course/update`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(courseData),
-    }).then((result) => {
-      if (result.status == 400) {
+    postWithFile(formData, `/api/v1/course/update`).then((result) => {
+      if (result.status == 200 || result.status == 201) {
+        result.json().then((r) => {
+          const apiResponse = r as APIResponse<ICourseDetailView>;
+          onSuccess(apiResponse);
+        });
+      } else {
         result.json().then((r) => {
           const failedResponse = r as FailedApiResponse;
           onFailure(failedResponse.error);
         });
-      } else if (result.status == 200) {
+      }
+    });
+  };
+
+  updateProfile = (
+    formData: FormData,
+    onSuccess: (response: ApiResponse) => void,
+    onFailure: (message: string) => void
+  ) => {
+    postWithFile(formData, `/api/user/update`).then((result) => {
+      if (result.status == 200 || result.status == 201) {
         result.json().then((r) => {
           const apiResponse = r as ApiResponse;
           onSuccess(apiResponse);
+        });
+      } else {
+        result.json().then((r) => {
+          const failedResponse = r as FailedApiResponse;
+          onFailure(failedResponse.error);
         });
       }
     });
@@ -599,7 +626,6 @@ class ProgramService {
   updateResState = (
     resourceId: number,
     state: string,
-    notifyStudent: boolean,
     onSuccess: (response: ApiResponse) => void,
     onFailure: (message: string) => void
   ) => {
@@ -609,7 +635,7 @@ class ProgramService {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ resourceId, state, notifyStudent }),
+      body: JSON.stringify({ resourceId, state }),
     }).then((result) => {
       if (result.status == 400) {
         result.json().then((r) => {
@@ -885,12 +911,12 @@ class ProgramService {
   };
 
   createCertificate = (
-    courseId: number,
+    productId: number,
 
     onSuccess: (response: ApiResponse) => void,
     onFailure: (message: string) => void
   ) => {
-    fetch(`/api/v1/course/certificate/generate-certificate/?courseId=${courseId}`, {
+    fetch(`/api/v1/course/certificate/generate-certificate/?productId=${productId}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -924,15 +950,15 @@ class ProgramService {
         "Content-Type": "application/json",
       },
     }).then((result) => {
-      if (result.status == 400) {
-        result.json().then((r) => {
-          const failedResponse = r as FailedApiResponse;
-          onFailure(failedResponse.error);
-        });
-      } else if (result.status == 200) {
+      if (result.status == 200) {
         result.json().then((r) => {
           const apiResponse = r as ApiResponse;
           onSuccess(apiResponse);
+        });
+      } else {
+        result.json().then((r) => {
+          const failedResponse = r as FailedApiResponse;
+          onFailure(failedResponse.error);
         });
       }
     });

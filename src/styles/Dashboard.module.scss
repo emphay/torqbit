@@ -2,27 +2,27 @@
 .course_content,
 .dashboard_content {
   padding: 20px 40px;
+}
 
-  .enrolled_course_list {
-    width: 100%;
-    background-color: var(--bg-primary);
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+.enrolled_course_list {
+  width: 100%;
+  background-color: var(--bg-primary);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 
-    .enroll_course_item {
-      font-size: 13px;
-      padding: 10px 15px;
-      cursor: pointer;
-      transition: all 0.3s ease-in;
-      > div {
-        color: var(--font-primary);
-      }
-      .completed_course {
-        color: var(--font-secondary);
-      }
+  .enroll_course_item {
+    font-size: 13px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease-in;
+    > div {
+      color: var(--font-primary);
+    }
+    .completed_course {
+      color: var(--font-secondary);
+    }
 
-      &:hover {
-        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 10px;
-      }
+    &:hover {
+      box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 10px;
     }
   }
 }
@@ -38,16 +38,9 @@
 //no courses found
 
 .no_course_found {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-
-  p {
-    // font-size: 15px;
-    color: var(--font-secondary);
-  }
+  width: 300px;
+  margin: 100px auto;
+  text-align: center;
 }
 
 // Guides Page styles
@@ -59,10 +52,13 @@
 
 // Course page styles
 
+.logged__out__course__card {
+  justify-content: center;
+}
+
 .course_card_wrapper {
   margin-top: 20px;
   display: flex;
-
   flex-wrap: wrap;
   gap: 20px;
 
@@ -75,6 +71,10 @@
     background-color: var(--bg-primary);
     box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
     transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    &:hover {
+      border: 1px solid var(--btn-primary);
+    }
 
     .card_content,
     .card_img {
@@ -165,12 +165,22 @@
   gap: 0 10px;
 }
 
+.video_container {
+  height: 180px;
+  width: 320px;
+  border-radius: 4px;
+  object-fit: cover;
+  background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .add_course_page {
   .add_course_header {
     height: 50px;
     width: 100%;
-    background-color: var(--bg-primary);
-    padding: 0 15px;
+    padding: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -198,11 +208,17 @@
   }
 
   .add_course_tabs {
-    padding: 10px 40px;
+    padding: 10px 0px;
+    input {
+      width: 250px;
+    }
 
     .add_course_setting {
-      padding: 20px 40px;
-      max-width: 600px;
+      max-width: var(--marketing-container-width);
+
+      .setting__video__segment {
+        margin: 0 auto 10px auto;
+      }
 
       .setting_header {
         margin-bottom: 20px;
@@ -232,9 +248,10 @@
       }
 
       .upload__thumbnail {
-        & > div {
-          height: 150px;
-          width: 150px;
+        width: 250px;
+        & > span {
+          height: auto;
+          width: 350px;
           position: relative;
         }
         right: 50%;
@@ -268,12 +285,6 @@
         padding: 10px 20px;
         margin-top: 20px;
 
-        .video_container {
-          height: 178px;
-          width: 318px;
-          border-radius: 4px;
-        }
-
         h3 {
           margin: 0;
           margin-bottom: 20px;
@@ -303,6 +314,7 @@
 
         .video_status_loading {
           color: var(--font-secondary);
+          background-color: var(--bg-secondary);
         }
 
         .camera_btn_img,
@@ -602,12 +614,27 @@
   }
 }
 
+.notification__page__wrapper {
+  max-width: fit-content;
+  padding: 20px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+
+  background-color: var(--bg-primary);
+}
+
 @media only screen and (max-width: 933px) and (orientation: landscape) {
   .setting_content,
   .course_content,
   .dashboard_content {
     margin-left: 60px;
     padding: 20px 20px 20px 40px;
+  }
+  .notification__page__wrapper {
+    max-width: 80vw;
   }
   .courseContainer {
     padding: 20px 20px 0px 40px;

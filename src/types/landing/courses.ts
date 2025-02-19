@@ -1,8 +1,10 @@
-import { courseDifficultyType, CourseType } from "@prisma/client";
+import { courseDifficultyType, CourseType, Role } from "@prisma/client";
+import { IBrandConfig } from "../schema";
+import { ICourseListItem } from "../courses/Course";
 export type CourseCardSize = "small" | "large";
 export interface ICourseCard {
   title: string;
-  thumbnail: string;
+  tvThumbnail: string;
   duration: string;
   description: string;
   link: string;
@@ -11,10 +13,14 @@ export interface ICourseCard {
   size?: CourseCardSize;
   difficulty: courseDifficultyType;
   cardClass?: string;
+  previewMode?: boolean;
 }
 
 export interface ICourseInfo {
   title: string;
   description: string;
-  courseList: ICourseCard[];
+  courseList: ICourseListItem[];
+  brand: IBrandConfig;
+
+  previewMode?: boolean;
 }

@@ -1,7 +1,5 @@
 import { bannerAlignment, ThemeSchema } from "@/types/schema";
-import { lazy } from "react";
-const NavBar = lazy(() => import("@/Templates/Standard/components/NavBar/NavBar"));
-const Features = lazy(() => import("@/Templates/Standard/components/Feature/Features"));
+import { Theme } from "@/types/theme";
 
 export type PageSiteConfig = ThemeSchema;
 
@@ -12,7 +10,7 @@ export const DEFAULT_THEME = {
     links: [
       {
         title: "Courses",
-        link: "/#courses",
+        link: "/courses",
       },
       {
         title: "Events",
@@ -20,7 +18,7 @@ export const DEFAULT_THEME = {
       },
       {
         title: "Blog",
-        link: "/blog",
+        link: "/blogs",
       },
     ],
   },
@@ -28,14 +26,20 @@ export const DEFAULT_THEME = {
   brand: {
     name: "TORQBIT",
     logo: "/icon/torqbit.png",
+    darkLogo: "/icon/torqbit.png",
+    defaultTheme: "light" as Theme,
+    themeSwitch: true,
+    icon: "/img/brand/torqbit-icon.png",
     title: "Become a Pro Product Builder",
     description: "Master the art of product building and turn your ideas into successful, scalable products",
     ogImage: "/icon/torqbit.png",
     favicon: "/favicon.ico",
     brandColor: "#5b63d3",
-    discord: "https://discord.gg/NserMXcx",
-    github: "https://github.com/torqbit",
-    youtube: "https://www.youtube.com/@torqbit",
+    socialLinks: {
+      discord: "https://discord.gg/NserMXcx",
+      github: "https://github.com/torqbit",
+      youtube: "https://www.youtube.com/@torqbit",
+    },
   },
 
   darkMode: true,
@@ -60,45 +64,74 @@ export const DEFAULT_THEME = {
     },
   },
   sections: {
-    feature: {
-      featureInfo: {
-        featureList: [
-          {
-            img: "/img/landing/auth.png",
-            title: "Authentication",
-            description:
-              "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
-            link: "/docs/auth",
-            cardClass: "steps__card__small",
-          },
-          {
-            img: "/img/landing/auth.png",
-            title: "Authentication",
-            description:
-              "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
-            link: "/docs/auth",
-            cardClass: "steps__card__small",
-          },
-          {
-            img: "/img/landing/auth.png",
-            title: "Authentication",
-            description:
-              "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
-            link: "/docs/auth",
-            cardClass: "steps__card__small",
-          },
-          {
-            img: "/img/landing/auth.png",
-            title: "Authentication",
-            description:
-              "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
-            link: "/docs/auth",
-            cardClass: "steps__card__small",
-          },
-        ],
-        title: "Features",
-        description: "Features for the learning platform",
-      },
+    courses: {
+      enable: false,
+      title: "Courses",
+      description: "Description for the course list",
+    },
+    learning: {
+      enabled: false,
+      title: "Our Learning path",
+      description: "Description for the course list",
+    },
+    blog: {
+      enable: false,
+      title: "Blogs",
+      description: "Description for the blog list",
+    },
+    features: {
+      enabled: true,
+      items: [
+        {
+          img: "/img/landing/auth.png",
+          title: "Authentication",
+          description: "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
+          link: "/docs/auth",
+          cardClass: "steps__card__small",
+        },
+        {
+          img: "/img/landing/auth.png",
+          title: "Authentication",
+          description: "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
+          link: "/docs/auth",
+          cardClass: "steps__card__small",
+        },
+        {
+          img: "/img/landing/auth.png",
+          title: "Authentication",
+          description: "Configure authentication with Google, Github or any other auth provider supported by NextAuth",
+          link: "/docs/auth",
+          cardClass: "steps__card__small",
+        },
+      ],
+      title: "Features",
+      description: "Features for the learning platform",
+    },
+
+    faq: {
+      title: "FAQ",
+      description: "FFrequently asked questions by the students",
+      items: [
+        {
+          question: "First question",
+          answer: "First answer",
+        },
+        {
+          question: "Second question",
+          answer: "Second answer",
+        },
+        {
+          question: "Third question",
+          answer: "Third answer",
+        },
+      ],
+      enabled: true,
+    },
+    tesimonials: {
+      items: [],
+      enabled: true,
+      title: "Teachers love our product",
+      description: "Find out what excites our users, when using our product",
     },
   },
 };

@@ -1,16 +1,14 @@
-import { Alert, Button, ConfigProvider, Form, Input, message, Spin, Tooltip } from "antd";
+import { Alert, Button, ConfigProvider, Flex, Form, Input, message, Tooltip } from "antd";
 import React, { useEffect, useState } from "react";
 import styles from "@/styles/Login.module.scss";
 import { signIn, useSession } from "next-auth/react";
 import { NextPage, GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
-import SpinLoader from "@/components/SpinLoader/SpinLoader";
+
 import { getToken } from "next-auth/jwt";
-import appConstant from "@/services/appConstant";
 import { authConstants, capitalizeFirstLetter, getCookieName } from "@/lib/utils";
 import Image from "next/image";
 import getLoginMethods from "@/lib/auth/loginMethods";
-import Link from "next/link";
 import SvgIcons from "@/components/SvgIcons";
 import AuthService from "@/services/auth/AuthService";
 import { getSiteConfig } from "@/services/getSiteConfig";
@@ -19,6 +17,7 @@ import antThemeConfig from "@/services/antThemeConfig";
 import darkThemeConfig from "@/services/darkThemeConfig";
 import prisma from "@/lib/prisma";
 import { useAppContext } from "@/components/ContextApi/AppContext";
+import Link from "next/link";
 
 const LoginPage: NextPage<{
   loginMethods: { available: string[]; configured: string[] };
@@ -27,6 +26,8 @@ const LoginPage: NextPage<{
   const router = useRouter();
   const [gitHubLoading, setGitHubLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [signupLoading, setSignupLoading] = useState<boolean>(false);
+
   const [emailSignup, setSignupWithEmail] = useState(false);
   const [loginError, setLoginError] = React.useState("");
   const { data: session, status: sessionStatus } = useSession();
@@ -35,7 +36,6 @@ const LoginPage: NextPage<{
   const { globalState } = useAppContext();
 
   React.useEffect(() => {
-    console.log(loginMethods);
     if (router.query.error) {
       if (router.query.error === "OAuthAccountNotLinked") {
         closeLoading();
@@ -59,20 +59,19 @@ const LoginPage: NextPage<{
     root.style.setProperty("--btn-primary", `${siteConfig.brand?.brandColor}`);
   }, []);
 
-  if (sessionStatus === "loading") {
-    return <SpinLoader />;
-  }
   const handleSignup = () => {
-    console.log(signupForm.getFieldsValue());
+    setSignupLoading(true);
 
     AuthService.signup(
       { ...signupForm.getFieldsValue() },
       (r) => {
+        setSignupLoading(false);
+
         messageApi.success(r.message);
         router.push("/login?provider=email");
       },
       (err) => {
-        console.log(`error: ${err}`);
+        setSignupLoading(false);
         messageApi.error(err);
       }
     );
@@ -91,11 +90,17 @@ const LoginPage: NextPage<{
 
   return (
     <ConfigProvider theme={globalState.theme == "dark" ? darkThemeConfig(siteConfig) : antThemeConfig(siteConfig)}>
-      <div className={styles.login_page_wrapper}>
+      <div className={`${styles.login_page_wrapper} bg__${globalState.theme}`}>
         {contextHolder}
         <div className={styles.social_login_container}>
-          <Image src={"/icon/torqbit.png"} height={60} width={60} alt={"logo"} />
-          <h3>Welcome to {appConstant.platformName}</h3>
+          {siteConfig.brand?.icon && typeof siteConfig.brand.icon === "string" ? (
+            <object type="image/png" data={siteConfig.brand.icon} height={60} width={60} aria-label={`Brand icon`}>
+              <Image src={"/icon/torqbit.png"} height={60} width={60} alt={"logo"} />
+            </object>
+          ) : (
+            <Image src={"/icon/torqbit.png"} height={60} width={60} alt={"logo"} />
+          )}
+          <h3>Welcome to {siteConfig.brand?.name}</h3>
 
           {emailSignup && (
             <Form
@@ -108,18 +113,14 @@ const LoginPage: NextPage<{
               validateTrigger="onSubmit"
             >
               <Form.Item name="name" label="" rules={[{ required: true, message: "Name is required" }]}>
-                <Input placeholder="Enter your name" style={{ height: 40, background: "transparent" }} />
+                <Input placeholder="Enter your name" style={{ height: 40 }} />
               </Form.Item>
               <Form.Item
                 name="email"
                 label=""
                 rules={[{ required: true, message: "Email is required" }, { type: "email" }]}
               >
-                <Input
-                  type="email"
-                  placeholder="Enter your email address"
-                  style={{ height: 40, background: "transparent" }}
-                />
+                <Input type="email" placeholder="Enter your email address" style={{ height: 40 }} />
               </Form.Item>
               <Form.Item
                 name="password"
@@ -129,13 +130,15 @@ const LoginPage: NextPage<{
                   { min: 6, message: "Password must be atleast 6 characters" },
                 ]}
               >
-                <Input.Password placeholder="Enter your password" style={{ height: 40, background: "transparent" }} />
+                <Input.Password placeholder="Enter your password" style={{ height: 40 }} />
               </Form.Item>
               <Button
                 onClick={() => {
                   signupForm.submit();
                 }}
+                loading={signupLoading}
                 type="primary"
+                style={{ width: 250, height: 40, display: "block" }}
                 className={styles.google_btn}
               >
                 Signup with Email
@@ -153,51 +156,59 @@ const LoginPage: NextPage<{
             </Form>
           )}
 
-          {!emailSignup &&
-            loginMethods.configured.map((provider) => {
-              if (provider === authConstants.CREDENTIALS_AUTH_PROVIDER) {
-                return (
-                  <>
-                    <Button
-                      onClick={() => {
-                        setSignupWithEmail(true);
-                      }}
-                      type="primary"
-                      className={styles.google_btn}
-                    >
-                      Signup with Email
-                    </Button>
-                  </>
-                );
-              } else {
-                return (
-                  <>
-                    <Tooltip
-                      title={
-                        loginMethods.available.includes(provider)
-                          ? ``
-                          : `Signup method disabled for ${capitalizeFirstLetter(
-                              provider
-                            )} due to missing environment variables`
-                      }
-                    >
+          {!emailSignup && (
+            <>
+              {loginMethods.configured.map((provider, i) => {
+                if (provider === authConstants.CREDENTIALS_AUTH_PROVIDER) {
+                  return (
+                    <div key={i}>
                       <Button
-                        style={{ width: 250, height: 40 }}
                         onClick={() => {
-                          signIn(provider, {
-                            callbackUrl: `/login/redirect?redirect=${router.query.redirect}`,
-                          });
+                          setSignupWithEmail(true);
                         }}
-                        type="default"
-                        disabled={!loginMethods.available.includes(provider)}
+                        type="primary"
+                        className={styles.google_btn}
+                        style={{ width: 250, height: 40, display: "block" }}
                       >
-                        Continue with {capitalizeFirstLetter(provider)}
+                        Signup with Email
                       </Button>
-                    </Tooltip>
-                  </>
-                );
-              }
-            })}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={i}>
+                      <Tooltip
+                        title={
+                          loginMethods.available.includes(provider)
+                            ? ``
+                            : `Signup method disabled for ${capitalizeFirstLetter(
+                                provider
+                              )} due to missing environment variables`
+                        }
+                      >
+                        <Button
+                          style={{ width: 250, height: 40 }}
+                          onClick={() => {
+                            signIn(provider, {
+                              callbackUrl: `/login/redirect?redirect=${router.query.redirect}`,
+                            });
+                          }}
+                          type="default"
+                          disabled={!loginMethods.available.includes(provider)}
+                        >
+                          Continue with {capitalizeFirstLetter(provider)}
+                        </Button>
+                      </Tooltip>
+                    </div>
+                  );
+                }
+              })}
+              <Flex gap={5}>
+                <p>Already have an account?</p>
+                <Link href={"/login"}>Sign in</Link>
+              </Flex>
+            </>
+          )}
 
           {loginError && (
             <Alert

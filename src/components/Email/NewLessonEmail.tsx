@@ -18,20 +18,21 @@ import {
 
 import * as React from "react";
 import { useAppContext } from "../ContextApi/AppContext";
+import { getSiteConfig } from "@/services/getSiteConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
 
 interface IProps {
   configData: INewLessonConfig;
 }
 
 export const NewLessonEmail = ({ configData }: IProps) => {
-  const { globalState } = useAppContext();
-  const siteConfig = globalState.siteConfig;
+  const { site }: { site: PageSiteConfig } = getSiteConfig();
 
   return (
     <Tailwind>
       <Html>
         <Head />
-        <Preview>{`${process.env.NEXT_PUBLIC_PLATFORM_NAME}`}</Preview>
+        <Preview>{`${site.brand?.name}`}</Preview>
         <Head>
           <style></style>
         </Head>
@@ -40,9 +41,9 @@ export const NewLessonEmail = ({ configData }: IProps) => {
             <Heading className="text-black   w-full  text-[20px] font-normal  my-0  py-2 px-[20px]  mx-0 ">
               <Img
                 height={50}
-                width={50}
+                width={"auto"}
                 style={{ display: "unset" }}
-                src={`https://cdn.torqbit.com/static/torq.png`}
+                src={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/${site.brand?.icon}`}
               />
             </Heading>
             <Hr className="border border-solid border-[#eaeaea]  mx-0 w-full" />
@@ -64,7 +65,7 @@ export const NewLessonEmail = ({ configData }: IProps) => {
               </Button>
               <Button
                 href={configData.url}
-                className={`bg-[${siteConfig.brand?.brandColor}] px-5 mt-[10px] py-2 w-[100px] text-white text-center text-[12px]  rounded`}
+                className={`bg-[${site.brand?.brandColor}] px-5 mt-[10px] py-2 w-[100px] text-white text-center text-[12px]  rounded`}
               >
                 Watch Lesson
               </Button>
@@ -76,7 +77,7 @@ export const NewLessonEmail = ({ configData }: IProps) => {
               <Text className="text-[#000] text-[15px] m-0 ">
                 Thanks & Regards <br />
               </Text>
-              <Text className="text-black text-[15px] my-2">{process.env.NEXT_PUBLIC_PLATFORM_NAME} team</Text>
+              <Text className="text-black text-[15px] my-2">{site.brand?.name} team</Text>
 
               <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
               <Text className="text-[#888] text-[14px] leading-[20px]">

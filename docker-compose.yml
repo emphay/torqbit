@@ -1,12 +1,10 @@
-version: "3"
-
 services:
   web:
-    image: torqbit/torqbit:0.1.2-rc3
+    image: torqbit/torqbit:0.1.7-rc2
     ports:
-      - "3000:80"
+      - "8080:80"
     build: .
-    command: ["sh", "-c", "nginx ; npx prisma db push --accept-data-loss; yarn start"]
+    command: ["sh", "-c", "nginx ; npx prisma db push --accept-data-loss; PORT=8080 yarn start"]
 
     depends_on:
       db:
@@ -16,10 +14,16 @@ services:
       interval: 30s
       timeout: 2s
       retries: 5
-      start_period: 10s
+      start_period: 15s
 
-    env_file:
-      - "./docker.env"
+    environment:
+      DATABASE_URL: "mysql://admin:torq123@db:3306/torqbitdb"
+      NODE_ENV: "production"
+      PORT: 8080
+      NEXT_PUBLIC_SECRET: "1RIpybeRHk21xmtzk2jjPxvayAD8FEtHauQTbx8bShE="
+      NEXTAUTH_URL: "http://localhost:8080"
+      NEXT_PUBLIC_APP_ENV: "development"
+      NEXT_PUBLIC_NEXTAUTH_URL: "http://localhost:8080"
 
     networks:
       - app-network
@@ -35,7 +39,7 @@ services:
       retries: 5
       start_period: 5s
     ports:
-      - "3306:3306"
+      - "3360:3306"
     environment:
       MYSQL_USER: admin
       MYSQL_ROOT_PASSWORD: root123

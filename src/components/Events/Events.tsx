@@ -1,22 +1,28 @@
 import { useAppContext } from "@/components/ContextApi/AppContext";
 import { capsToPascalCase } from "@/lib/utils";
-import { EventType, Theme, User } from "@prisma/client";
+import { EventType, User } from "@prisma/client";
 import { FC, useEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import EventService, { IEventList } from "@/services/EventService";
 import EventCard from "@/components/Events/EventCard";
 import styles from "@/styles/Marketing/Events/Event.module.scss";
-import { Button, Flex, message, Tabs, TabsProps } from "antd";
+import { Button, Flex, message, Skeleton, Tabs, TabsProps } from "antd";
+import { EmptyEvents } from "../SvgIcons";
+import { getIconTheme } from "@/services/darkThemeConfig";
+import { PageSiteConfig } from "@/services/siteConstant";
+import { Theme } from "@/types/theme";
+import { getDummyArray } from "@/lib/dummyData";
+import NoContentFound from "../NoContentFound";
 
-const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: number; eventLink: string }> = ({
-  user,
-  eventList,
-  totalEventsLength,
-  eventLink,
-}) => {
+const Events: FC<{
+  user: User;
+  eventList: IEventList[];
+  eventLink: string;
+  siteConfig: PageSiteConfig;
+}> = ({ user, eventList, eventLink, siteConfig }) => {
   const [eventData, setEventData] = useState<IEventList[]>(eventList);
   const [eventfetchLength, setEventFetchLength] = useState<number>(5);
-  const [totalEvents, setTotalEvents] = useState<number>(totalEventsLength);
+  const [totalEvents, setTotalEvents] = useState<number>(eventList.length);
 
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [loading, setLoading] = useState<boolean>(false);
@@ -24,39 +30,6 @@ const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: numbe
 
   const { dispatch, globalState } = useAppContext();
   const isMobile = useMediaQuery({ query: "(max-width: 435px)" });
-
-  const noEventExist = (
-    <div
-      style={{
-        height: 400,
-        marginBottom: "20px ",
-        textAlign: "center",
-        borderRadius: 8,
-        display: "flex",
-        padding: 10,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: globalState.theme === "dark" ? "#283040" : "#fff",
-        color: globalState.theme === "dark" ? "#fff" : "#000",
-      }}
-    >
-      <p
-        style={{
-          maxWidth: isMobile ? 300 : 400,
-          lineHeight: 1.5,
-        }}
-      >
-        There are no events currently. Visit here later again
-      </p>
-    </div>
-  );
-
-  const setGlobalTheme = (theme: Theme) => {
-    dispatch({
-      type: "SWITCH_THEME",
-      payload: theme,
-    });
-  };
 
   const getEventList = () => {
     setLoading(true);
@@ -124,7 +97,16 @@ const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: numbe
               )}
             </Flex>
           ) : (
-            noEventExist
+            <NoContentFound
+              content="There are no Events currently.Visit here later again."
+              isMobile={isMobile}
+              icon={
+                <EmptyEvents
+                  size={isMobile ? "200px" : "300px"}
+                  {...getIconTheme(globalState.theme || "light", siteConfig.brand)}
+                />
+              }
+            />
           )}
         </>
       ),
@@ -156,7 +138,16 @@ const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: numbe
               )}
             </Flex>
           ) : (
-            noEventExist
+            <NoContentFound
+              content="There are no workshop events currently.Visit here later again."
+              isMobile={isMobile}
+              icon={
+                <EmptyEvents
+                  size={isMobile ? "200px" : "300px"}
+                  {...getIconTheme(globalState.theme || "light", siteConfig.brand)}
+                />
+              }
+            />
           )}
         </>
       ),
@@ -188,7 +179,16 @@ const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: numbe
               )}
             </Flex>
           ) : (
-            noEventExist
+            <NoContentFound
+              content="There are no talk events currently.Visit here later again."
+              isMobile={isMobile}
+              icon={
+                <EmptyEvents
+                  size={isMobile ? "200px" : "300px"}
+                  {...getIconTheme(globalState.theme || "light", siteConfig.brand)}
+                />
+              }
+            />
           )}
         </>
       ),
@@ -198,7 +198,19 @@ const Events: FC<{ user: User; eventList: IEventList[]; totalEventsLength: numbe
     <>
       {contextHolder}
       <div className={styles.event_list_wrapper}>
-        <Tabs items={items} onChange={onChange} />
+        {eventData.length > 0 && <Tabs items={items} onChange={onChange} />}
+        {eventData.length == 0 && (
+          <NoContentFound
+            content="There are no Events currently.Visit here later again."
+            isMobile={isMobile}
+            icon={
+              <EmptyEvents
+                size={isMobile ? "200px" : "300px"}
+                {...getIconTheme(globalState.theme || "light", siteConfig.brand)}
+              />
+            }
+          />
+        )}
       </div>
     </>
   );

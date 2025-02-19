@@ -1,5 +1,5 @@
 import { checkDateExpired, convertToDayMonthTime, getCookieName } from "@/lib/utils";
-import { StateType, User } from "@prisma/client";
+import { Role, StateType, User } from "@prisma/client";
 import { GetServerSidePropsContext } from "next";
 import { getToken } from "next-auth/jwt";
 import { FC } from "react";
@@ -11,6 +11,10 @@ import DefaulttHero from "@/components/Marketing/DefaultHero/DefaultHero";
 import MarketingLayout from "@/components/Layouts/MarketingLayout";
 import { PageSiteConfig } from "@/services/siteConstant";
 import { getSiteConfig } from "@/services/getSiteConfig";
+import AppLayout from "@/components/Layouts/AppLayout";
+import { useMediaQuery } from "react-responsive";
+import { Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const EventsPage: FC<{
   user: User;
@@ -18,16 +22,53 @@ const EventsPage: FC<{
   totalEventsLength: number;
   siteConfig: PageSiteConfig;
 }> = ({ user, eventList, totalEventsLength, siteConfig }) => {
+  const isMobile = useMediaQuery({ query: "(max-width: 435px)" });
+
   return (
-    <MarketingLayout
-      siteConfig={siteConfig}
-      user={user}
-      heroSection={<DefaulttHero title="Events" description="Connect, Learn, and Thrive Together!" />}
-    >
-      <div className={styles.events_wrapper}>
-        <Events user={user} eventList={eventList} totalEventsLength={totalEventsLength} eventLink="events" />;
-      </div>
-    </MarketingLayout>
+    <>
+      {user ? (
+        <>
+          {user.role === Role.STUDENT ? (
+            <MarketingLayout
+              mobileHeroMinHeight={60}
+              showFooter={!isMobile}
+              siteConfig={siteConfig}
+              heroSection={
+                <>
+                  {!isMobile && eventList && (
+                    <DefaulttHero title="Events" description="Connect, Learn, and Thrive Together!" />
+                  )}
+                </>
+              }
+              user={user}
+            >
+              <Spin spinning={!eventList} indicator={<LoadingOutlined spin />} size="large">
+                <div className={styles.events_wrapper}>
+                  <Events user={user} eventList={eventList} eventLink="events" siteConfig={siteConfig} />;
+                </div>
+              </Spin>
+            </MarketingLayout>
+          ) : (
+            <AppLayout siteConfig={siteConfig}>
+              <div className={styles.events_wrapper}>
+                <Events user={user} eventList={eventList} eventLink="events" siteConfig={siteConfig} />;
+              </div>
+            </AppLayout>
+          )}
+        </>
+      ) : (
+        <>
+          <MarketingLayout
+            siteConfig={siteConfig}
+            heroSection={<DefaulttHero title="Events" description="Connect, Learn, and Thrive Together!" />}
+          >
+            <div className={styles.events_wrapper}>
+              <Events user={user} eventList={eventList} eventLink="events" siteConfig={siteConfig} />;
+            </div>
+          </MarketingLayout>
+        </>
+      )}
+    </>
   );
 };
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
